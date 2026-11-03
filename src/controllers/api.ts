@@ -55,10 +55,17 @@ export interface ClientDetail extends ClientSummary {
 	orders : Order[]
 }
 
+const API_ORIGIN = location.hostname === 'admin.epay.stream'
+	? 'https://api.epay.stream'
+	: location.hostname === 'dev-admin.epay.stream'
+	? 'https://dev-api.epay.stream'
+	: 'http://localhost:8787'
+
 class Api {
 	async request<T> (path : string, init? : RequestInit) : Promise<T> {
-		const response = await fetch(`/admin/api${path}`, {
+		const response = await fetch(`${API_ORIGIN}/admin/api${path}`, {
 			...init,
+			credentials: 'include',
 			headers: {
 				'content-type': 'application/json',
 				...init?.headers
