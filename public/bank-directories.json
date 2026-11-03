@@ -1,0 +1,1597 @@
+{
+	"IDR": [
+		{
+			"code": "002",
+			"name": "BRI"
+		},
+		{
+			"code": "008",
+			"name": "Bank Mandiri"
+		},
+		{
+			"code": "009",
+			"name": "Bank Negara Indonesia"
+		},
+		{
+			"code": "011",
+			"name": "Bank Danamon"
+		},
+		{
+			"code": "013",
+			"name": "Bank Permata"
+		},
+		{
+			"code": "014",
+			"name": "BCA"
+		},
+		{
+			"code": "016",
+			"name": "BII Maybank"
+		},
+		{
+			"code": "019",
+			"name": "Bank Panin"
+		},
+		{
+			"code": "022",
+			"name": "CIMB Niaga"
+		},
+		{
+			"code": "023",
+			"name": "Bank UOB Indonesia"
+		},
+		{
+			"code": "028",
+			"name": "Bank OCBC NISP"
+		},
+		{
+			"code": "031",
+			"name": "Citibank"
+		},
+		{
+			"code": "036",
+			"name": "Bank China Construction Bank Indonesia"
+		},
+		{
+			"code": "037",
+			"name": "Bank Artha Graha Internasional"
+		},
+		{
+			"code": "042",
+			"name": "MUFG Bank"
+		},
+		{
+			"code": "046",
+			"name": "Bank DBS Indonesia"
+		},
+		{
+			"code": "050",
+			"name": "Standard Chartered"
+		},
+		{
+			"code": "054",
+			"name": "Bank Capital Indonesia"
+		},
+		{
+			"code": "061",
+			"name": "ANZ Indonesia"
+		},
+		{
+			"code": "069",
+			"name": "Bank OF China"
+		},
+		{
+			"code": "076",
+			"name": "Bank Bumi Arta"
+		},
+		{
+			"code": "041",
+			"name": "Bank HSBC Indonesia"
+		},
+		{
+			"code": "088",
+			"name": "Bank Antardaerah"
+		},
+		{
+			"code": "060",
+			"name": "Bank Rabobank"
+		},
+		{
+			"code": "097",
+			"name": "Bank Mayapada International"
+		},
+		{
+			"code": "110",
+			"name": "BJB"
+		},
+		{
+			"code": "111",
+			"name": "Bank DKI"
+		},
+		{
+			"code": "112",
+			"name": "Bank DIY"
+		},
+		{
+			"code": "113",
+			"name": "Bank Jateng"
+		},
+		{
+			"code": "114",
+			"name": "Bank Jatim"
+		},
+		{
+			"code": "115",
+			"name": "Bank Jambi"
+		},
+		{
+			"code": "116",
+			"name": "Bank Aceh"
+		},
+		{
+			"code": "117",
+			"name": "Bank Sumut"
+		},
+		{
+			"code": "118",
+			"name": "Bank Nagari"
+		},
+		{
+			"code": "119",
+			"name": "Bank Riau"
+		},
+		{
+			"code": "120",
+			"name": "Bank Sumsel Babel"
+		},
+		{
+			"code": "121",
+			"name": "Bank Lampung"
+		},
+		{
+			"code": "122",
+			"name": "Bank Kalsel"
+		},
+		{
+			"code": "123",
+			"name": "Bank Kaltim"
+		},
+		{
+			"code": "124",
+			"name": "Bank Kalteng"
+		},
+		{
+			"code": "125",
+			"name": "Bank Kaltim"
+		},
+		{
+			"code": "126",
+			"name": "Bank Sulselbar"
+		},
+		{
+			"code": "127",
+			"name": "Bank Sulut"
+		},
+		{
+			"code": "128",
+			"name": "Bank NTB"
+		},
+		{
+			"code": "129",
+			"name": "Bank Bali"
+		},
+		{
+			"code": "130",
+			"name": "Bank NTT"
+		},
+		{
+			"code": "131",
+			"name": "Bank Maluku"
+		},
+		{
+			"code": "132",
+			"name": "Bank Papua"
+		},
+		{
+			"code": "133",
+			"name": "Bank Bengkulu"
+		},
+		{
+			"code": "134",
+			"name": "Bank Sulteng"
+		},
+		{
+			"code": "135",
+			"name": "Bank Sultra"
+		},
+		{
+			"code": "137",
+			"name": "Bank Banten"
+		},
+		{
+			"code": "145",
+			"name": "Bank Nusantara Parahyangan"
+		},
+		{
+			"code": "146",
+			"name": "Bank Of India Indonesia"
+		},
+		{
+			"code": "147",
+			"name": "Bank Muamalat"
+		},
+		{
+			"code": "151",
+			"name": "Bank Mestika"
+		},
+		{
+			"code": "152",
+			"name": "Bank Shinhan"
+		},
+		{
+			"code": "153",
+			"name": "Bank Sinarmas"
+		},
+		{
+			"code": "157",
+			"name": "Bank Maspion Indonesia"
+		},
+		{
+			"code": "161",
+			"name": "Bank Ganesha"
+		},
+		{
+			"code": "164",
+			"name": "Bank ICBC Indonesia"
+		},
+		{
+			"code": "167",
+			"name": "Bank QNB Indonesia"
+		},
+		{
+			"code": "200",
+			"name": "BTN"
+		},
+		{
+			"code": "212",
+			"name": "Bank Woori Saudara"
+		},
+		{
+			"code": "213",
+			"name": "Bank SMBC Indonesia"
+		},
+		{
+			"code": "405",
+			"name": "Bank Victoria Syariah"
+		},
+		{
+			"code": "425",
+			"name": "BJB Syariah"
+		},
+		{
+			"code": "426",
+			"name": "Bank Mega"
+		},
+		{
+			"code": "441",
+			"name": "Bank Bukopin"
+		},
+		{
+			"code": "451",
+			"name": "Bank Syariah Indonesia"
+		},
+		{
+			"code": "472",
+			"name": "Bank Jasa Jakarta"
+		},
+		{
+			"code": "484",
+			"name": "Bank KEB Hana"
+		},
+		{
+			"code": "485",
+			"name": "Bank MNC"
+		},
+		{
+			"code": "490",
+			"name": "Bank Neo Commerce"
+		},
+		{
+			"code": "494",
+			"name": "Bank Raya Indonesia"
+		},
+		{
+			"code": "498",
+			"name": "Bank SBI Indonesia"
+		},
+		{
+			"code": "501",
+			"name": "BCA Digital"
+		},
+		{
+			"code": "503",
+			"name": "Bank National Nobu"
+		},
+		{
+			"code": "506",
+			"name": "Bank Mega Syariah"
+		},
+		{
+			"code": "513",
+			"name": "Bank INA"
+		},
+		{
+			"code": "517",
+			"name": "Bank Panin Syariah"
+		},
+		{
+			"code": "520",
+			"name": "Bank Prima"
+		},
+		{
+			"code": "521",
+			"name": "Bank Syariah Bukopin"
+		},
+		{
+			"code": "523",
+			"name": "Bank Sahabat Sampoerna"
+		},
+		{
+			"code": "526",
+			"name": "Bank Oke Indonesia"
+		},
+		{
+			"code": "536",
+			"name": "Bank BCA Syariah"
+		},
+		{
+			"code": "542",
+			"name": "Bank Jago"
+		},
+		{
+			"code": "547",
+			"name": "Bank BTPN Syariah"
+		},
+		{
+			"code": "548",
+			"name": "Bank Multiarta Sentosa"
+		},
+		{
+			"code": "553",
+			"name": "Bank Hibank Indonesia"
+		},
+		{
+			"code": "555",
+			"name": "Bank Index"
+		},
+		{
+			"code": "559",
+			"name": "Bank CNB"
+		},
+		{
+			"code": "564",
+			"name": "Bank Mandiri Taspen"
+		},
+		{
+			"code": "566",
+			"name": "Bank Victoria International"
+		},
+		{
+			"code": "567",
+			"name": "Allo Bank"
+		},
+		{
+			"code": "724",
+			"name": "Bank DKI Syariah"
+		},
+		{
+			"code": "725",
+			"name": "Bank Jateng Syariah"
+		},
+		{
+			"code": "734",
+			"name": "Bank Sinarmas Syariah"
+		},
+		{
+			"code": "867",
+			"name": "Bank Eka"
+		},
+		{
+			"code": "945",
+			"name": "Bank IBK Indonesia"
+		},
+		{
+			"code": "949",
+			"name": "Bank CTBC Indonesia"
+		},
+		{
+			"code": "950",
+			"name": "Bank Commonwealth"
+		}
+	],
+	"VND": [
+		{
+			"bankCode": "VNM00004",
+			"napasCode": "970400",
+			"name": "Saigon Bank for Industry and Trade (SaigonBank)",
+			"swiftCode": "SBITVNVX"
+		},
+		{
+			"bankCode": "VNM00005",
+			"napasCode": "970403",
+			"name": "Saigon Thuong Tin Commercial Joint Stock Bank (SacomBank)",
+			"swiftCode": "SGTTVNVX"
+		},
+		{
+			"bankCode": "VNM00006",
+			"napasCode": "970405",
+			"name": "Vietnam Bank for Agriculture and Rural Development (AgriBank)",
+			"swiftCode": "VBAAVNVX"
+		},
+		{
+			"bankCode": "VNM00007",
+			"napasCode": "970406",
+			"name": "Dong A Joint Stock Commercial Bank (DongA Bank)",
+			"swiftCode": "EACBVNVX"
+		},
+		{
+			"bankCode": "VNM00008",
+			"napasCode": "970407",
+			"name": "Vietnam Technological and commercial Joint Stock Bank (Techcom Bank)",
+			"swiftCode": "VTCBVNVX"
+		},
+		{
+			"bankCode": "VNM00009",
+			"napasCode": "970408",
+			"name": "Global Petro Sole Member Limited Commercial Bank (GPBank)",
+			"swiftCode": "GBNKVNVX"
+		},
+		{
+			"bankCode": "VNM00010",
+			"napasCode": "970409",
+			"name": "Bac A Commercial Joint Stock Bank",
+			"swiftCode": "NASCVNVX"
+		},
+		{
+			"bankCode": "VNM00011",
+			"napasCode": "970410",
+			"name": "Standard Chartered Viet Nam",
+			"swiftCode": "SCBLVNVX"
+		},
+		{
+			"bankCode": "VNM00012",
+			"napasCode": "970412",
+			"name": "Vietnam Public Joint Stock Commercial Bank (PVcomBank)",
+			"swiftCode": "WBVNVNVX"
+		},
+		{
+			"bankCode": "VNM00013",
+			"napasCode": "970415",
+			"name": "Vietnam Joint Stock Commercial Bank for Intrustry and Trade (VietinBank)",
+			"swiftCode": "ICBVVNVX"
+		},
+		{
+			"bankCode": "VNM00014",
+			"napasCode": "970416",
+			"name": "Asia Commercial Bank (ACB)",
+			"swiftCode": "ASCBVNVX"
+		},
+		{
+			"bankCode": "VNM00015",
+			"napasCode": "970419",
+			"name": "National Citizen Commercial Joint Stock Bank (NCB)",
+			"swiftCode": "NVBAVNVX"
+		},
+		{
+			"bankCode": "VNM00016",
+			"napasCode": "970422",
+			"name": "Military Commercial Joint Stock bank (MB)",
+			"swiftCode": "MSCBVNVX"
+		},
+		{
+			"bankCode": "VNM00017",
+			"napasCode": "970423",
+			"name": "Tienphong commercial Joint Stock Bank (TienPhong Bank)",
+			"swiftCode": "TPBVVNVX"
+		},
+		{
+			"bankCode": "VNM00018",
+			"napasCode": "970424",
+			"name": "Shinhan Bank Vietnam (SHBVN)",
+			"swiftCode": "SHBKVNVX"
+		},
+		{
+			"bankCode": "VNM00019",
+			"napasCode": "970425",
+			"name": "An Binh Commercial Joint Stock Bank (AnBinh Bank)",
+			"swiftCode": "ABBKVNVX"
+		},
+		{
+			"bankCode": "VNM00020",
+			"napasCode": "970426",
+			"name": "Vietnam Maritime Commercial Joint Stock Bank (Maritime Bank)",
+			"swiftCode": "MCOBVNVX"
+		},
+		{
+			"bankCode": "VNM00021",
+			"napasCode": "970428",
+			"name": "Nam A Commercial Joint Stock Bank (NamA Bank)",
+			"swiftCode": "NAMAVNVX"
+		},
+		{
+			"bankCode": "VNM00022",
+			"napasCode": "970429",
+			"name": "Saigon Commercial Bank (SGCB)",
+			"swiftCode": "SACLVNVX"
+		},
+		{
+			"bankCode": "VNM00023",
+			"napasCode": "970431",
+			"name": "Vietnam Export Import Commercial Joint Stock Bank (EximBank)",
+			"swiftCode": "EBVIVNVX"
+		},
+		{
+			"bankCode": "VNM00024",
+			"napasCode": "970432",
+			"name": "Vietnam Prosperity Joint Stock Commercial Bank (VPBank)",
+			"swiftCode": "VPBKVNVX"
+		},
+		{
+			"bankCode": "VNM00025",
+			"napasCode": "970433",
+			"name": "Vietnam Thuong Tin Commercial Joint Stock Bank (Vietbank)",
+			"swiftCode": "VNTTVNVX"
+		},
+		{
+			"bankCode": "VNM00026",
+			"napasCode": "970436",
+			"name": "Joint Stock Commercial Bank for Foreign Trade of Vietnam (Vietcombank)",
+			"swiftCode": "BFTVVNVX"
+		},
+		{
+			"bankCode": "VNM00027",
+			"napasCode": "970437",
+			"name": "Ho Chi Minh City Development Joint Stock Commercial Bank (HDBank)",
+			"swiftCode": "HDBCVNVX"
+		},
+		{
+			"bankCode": "VNM00028",
+			"napasCode": "970438",
+			"name": "BaoViet Commercial Joint Stock Bank (BaoViet Bank)",
+			"swiftCode": "BVBVVNVX"
+		},
+		{
+			"bankCode": "VNM00029",
+			"napasCode": "970440",
+			"name": "Southeast Asia Commercial Joint Stock Bank (SeaBank)",
+			"swiftCode": "SEAVVNVX"
+		},
+		{
+			"bankCode": "VNM00030",
+			"napasCode": "970441",
+			"name": "Vietnam International Commercial Joint Stock Bank (VIB)",
+			"swiftCode": "VNIBVNVX"
+		},
+		{
+			"bankCode": "VNM00031",
+			"napasCode": "970442",
+			"name": "Hong Leong Bank Vietnam",
+			"swiftCode": "HLBBVNVX"
+		},
+		{
+			"bankCode": "VNM00032",
+			"napasCode": "970443",
+			"name": "Saigon - Hanoi Commercial Joint Stock Bank (SHB)",
+			"swiftCode": "SHBAVNVX"
+		},
+		{
+			"bankCode": "VNM00033",
+			"napasCode": "970448",
+			"name": "Orient Commercial Bank (OCB)",
+			"swiftCode": "ORCOVNVX"
+		},
+		{
+			"bankCode": "VNM00034",
+			"napasCode": "970452",
+			"name": "Kien Long Commercial Joint Stock Bank (KienLong Bank)",
+			"swiftCode": "KLBKVNVX"
+		},
+		{
+			"bankCode": "VNM00035",
+			"napasCode": "970454",
+			"name": "Viet Capital Joint Stock Commercial Bank (Viet Capital Bank)",
+			"swiftCode": "VCBCVNVX"
+		},
+		{
+			"bankCode": "VNM00042",
+			"napasCode": "970414",
+			"name": "Ocean Commercial One Member Limited Liability Bank (OceanBank)",
+			"swiftCode": "OJBAVNVX"
+		},
+		{
+			"bankCode": "VNM00043",
+			"napasCode": "970434",
+			"name": "Indovina Bank",
+			"swiftCode": "IABBVNVX"
+		},
+		{
+			"bankCode": "VNM00044",
+			"napasCode": "970439",
+			"name": "Public Bank Vietnam Limited (Public Bank)",
+			"swiftCode": "VIDPVNV5"
+		},
+		{
+			"bankCode": "VNM00045",
+			"napasCode": "970444",
+			"name": "Construction Commercial One Member Limited Liability Bank",
+			"swiftCode": "GTBAVNVX"
+		},
+		{
+			"bankCode": "VNM00046",
+			"napasCode": "970455",
+			"name": "Industrial Bank Of Korea Ha Noi Branch",
+			"swiftCode": "IBKOVNVXHAN"
+		},
+		{
+			"bankCode": "VNM00047",
+			"napasCode": "970456",
+			"name": "Industrial Bank Of Korea Ho Chi Minh Branch",
+			"swiftCode": "IBKOVNVX"
+		},
+		{
+			"bankCode": "VNM00048",
+			"napasCode": "970457",
+			"name": "Woori Bank",
+			"swiftCode": "HVBKVNVX"
+		},
+		{
+			"bankCode": "VNM00049",
+			"napasCode": "970458",
+			"name": "United Overseas Bank (Vietnam) Limited",
+			"swiftCode": "UOVBVNVX"
+		},
+		{
+			"bankCode": "VNM00050",
+			"napasCode": "970463",
+			"name": "Kookmin Bank - Ho Chi Minh Branch",
+			"swiftCode": "CZNBVNVX"
+		},
+		{
+			"bankCode": "VNM00051",
+			"napasCode": "970427",
+			"name": "Vietnam-Asia Commercial Joint-Stock Bank",
+			"swiftCode": "VNACVNVX"
+		},
+		{
+			"bankCode": "VNM00052",
+			"napasCode": "970466",
+			"name": "KEB Hana Bank - Ho Chi Minh Branch",
+			"swiftCode": "KOEXVN2X"
+		},
+		{
+			"bankCode": "VNM00054",
+			"napasCode": "970418",
+			"name": "Bank for Investment and Development of Vietnam Joint Stock Commercial Bank (BIDV)"
+		},
+		{
+			"bankCode": "VNM00055",
+			"napasCode": "970421",
+			"name": "Vietnam Russia Joint Venture Bank (VR Bank)"
+		},
+		{
+			"bankCode": "VNM00056",
+			"napasCode": "970430",
+			"name": "Petrolimex Group Commercial Joint Stock Bank (PG Bank)"
+		},
+		{
+			"bankCode": "VNM00057",
+			"napasCode": "970449",
+			"name": "Lien Viet Post Joint Stock Commercial Bank (LienViet Bank)"
+		},
+		{
+			"bankCode": "VNM00058",
+			"napasCode": "999888",
+			"name": "Vietnam Bank for Social Policies (VBSP)"
+		},
+		{
+			"bankCode": "VNM00098",
+			"napasCode": "668888",
+			"name": "KSK - Dai chung TNHH Kasikornbank - Chi nhanh TP. HCM"
+		},
+		{
+			"bankCode": "VNM00099",
+			"napasCode": "970446",
+			"name": "COOPBANK - NH Hop tac xa Viet Nam"
+		},
+		{
+			"bankCode": "VNM00100",
+			"napasCode": "970462",
+			"name": "KBHN - Kookmin Chi nhanh Ha Noi"
+		},
+		{
+			"bankCode": "VNM00101",
+			"napasCode": "970467",
+			"name": "KEB Hana - Chi nhanh Ha Noi"
+		},
+		{
+			"bankCode": "VNM00102",
+			"napasCode": "971122",
+			"name": "PVCombank-NAPAS"
+		},
+		{
+			"bankCode": "VNM00103",
+			"napasCode": "546034",
+			"name": "TMCP Viet Nam Thinh Vuong - Ngan hang so CAKE by VPBank"
+		},
+		{
+			"bankCode": "VNM00104",
+			"napasCode": "546035",
+			"name": "TMCP Viet Nam Thinh Vuong - Ngan hang so Ubank by VPBank"
+		},
+		{
+			"bankCode": "VNM00105",
+			"napasCode": "963311",
+			"name": "Vikki by HDBank"
+		},
+		{
+			"bankCode": "VNM00106",
+			"napasCode": "963368",
+			"name": "Cong ty Tai chinh TNHH MTV Shinhan Viet Nam"
+		},
+		{
+			"bankCode": "VNM00107",
+			"napasCode": "963369",
+			"name": "NH TMCP Phuong Dong (Liobank)"
+		},
+		{
+			"bankCode": "VNM00108",
+			"napasCode": "963388",
+			"name": "BVBank Timo - NH TMCP Ban Viet"
+		},
+		{
+			"bankCode": "VNM00110",
+			"napasCode": "971005",
+			"name": "Viettel Money - TCT DV so Viettel - CN Tap doan CN VT Quan doi"
+		},
+		{
+			"bankCode": "VNM00111",
+			"napasCode": "971011",
+			"name": "VNPT Money - TT DV TC so VNPT - CN Tong cong ty truyen thong"
+		},
+		{
+			"bankCode": "VNM00115",
+			"napasCode": "971133",
+			"name": "PVcomBank Pay"
+		},
+		{
+			"bankCode": "VNM00116",
+			"napasCode": "977777",
+			"name": "MAFC - CTY Tai chinh TNHH MTV Mirae Asset (Viet Nam)"
+		},
+		{
+			"bankCode": "VNM00068",
+			"name": "State Bank of Vietnam",
+			"swiftCode": "NABVVNV1"
+		},
+		{
+			"bankCode": "VNM00069",
+			"name": "Vietnam Development Bank",
+			"swiftCode": "VDBVVNVX"
+		},
+		{
+			"bankCode": "VNM00070",
+			"name": "Siam Commercial Bank",
+			"swiftCode": "SICOVNVX"
+		},
+		{
+			"bankCode": "VNM00071",
+			"name": "Bpce Iom",
+			"swiftCode": "BFCEVNVX"
+		},
+		{
+			"bankCode": "VNM00072",
+			"name": "Anz Viet Nam",
+			"swiftCode": "ANZBVNVX"
+		},
+		{
+			"bankCode": "VNM00073",
+			"name": "Jp Morgan Chase Bank",
+			"swiftCode": "CHASVNVX"
+		},
+		{
+			"bankCode": "VNM00074",
+			"name": "E.Sun Commercial Bank Ltd",
+			"swiftCode": "ESUNVNVX"
+		},
+		{
+			"bankCode": "VNM00075",
+			"name": "Bank Of India",
+			"swiftCode": "BKIDVNVX"
+		},
+		{
+			"bankCode": "VNM00076",
+			"name": "Agricultural Bank Of China Limited - Ha Noi Branch",
+			"swiftCode": "ABOCVNVX"
+		},
+		{
+			"bankCode": "VNM00077",
+			"name": "Mizuho Bank Ha Noi Branch",
+			"swiftCode": "MHCBVNVXXXX"
+		},
+		{
+			"bankCode": "VNM00078",
+			"name": "Mizuho Bank Ho Chi Minh Branch",
+			"swiftCode": "MHCBVNVX"
+		},
+		{
+			"bankCode": "VNM00079",
+			"name": "First Commercial Bank Hanoi Branch",
+			"swiftCode": "FCBKVNVXHAN"
+		},
+		{
+			"bankCode": "VNM00080",
+			"name": "First Commercial Bank Hochiminh Branch",
+			"swiftCode": "FCBKVNVX"
+		},
+		{
+			"bankCode": "VNM00081",
+			"name": "Ctbc Bank Co.,Ltd",
+			"swiftCode": "CTCBVNVX"
+		},
+		{
+			"bankCode": "VNM00082",
+			"name": "Malayan Banking Berhad (Maybank) Ha Noi Branch",
+			"swiftCode": "MBBEVNVXXXX"
+		},
+		{
+			"bankCode": "VNM00083",
+			"name": "Malayan Banking Berhad (Maybank) Ho Chi Minh Branch",
+			"swiftCode": "MBBEVNVX"
+		},
+		{
+			"bankCode": "VNM00084",
+			"name": "Fubon Bank Binh Duong Branch",
+			"swiftCode": "TPBKVNVX"
+		},
+		{
+			"bankCode": "VNM00085",
+			"name": "Deutsche Bank",
+			"swiftCode": "DEUTVNVX"
+		},
+		{
+			"bankCode": "VNM00086",
+			"name": "The Shanghai Commercial And Saving",
+			"swiftCode": "SCSBVNVX"
+		},
+		{
+			"bankCode": "VNM00087",
+			"name": "China Construction Bank Corporation",
+			"swiftCode": "PCBCVNVX"
+		},
+		{
+			"bankCode": "VNM00088",
+			"name": "Mufg Bank Ltd - Ha Noi Branch",
+			"swiftCode": "BOTKVNV5"
+		},
+		{
+			"bankCode": "VNM00089",
+			"name": "Mufg Bank Ltd - Ho Chi Min Branch",
+			"swiftCode": "BOTKVNVX"
+		},
+		{
+			"bankCode": "VNM00090",
+			"name": "Busan Bank Co., Ltd",
+			"swiftCode": "PUSBVNVX"
+		},
+		{
+			"bankCode": "VNM00091",
+			"name": "Citibank Vietnam Ho Chi Minh Branch",
+			"swiftCode": "CITIVNVX"
+		},
+		{
+			"bankCode": "VNM00092",
+			"name": "Oversea Chinese Banking",
+			"swiftCode": "OCBCVNVX"
+		},
+		{
+			"bankCode": "VNM00093",
+			"name": "Bank Of Communications",
+			"swiftCode": "COMMVNVX"
+		},
+		{
+			"bankCode": "VNM00094",
+			"name": "Mega International Commercial Bank Co., Ltd",
+			"swiftCode": "ICBCVNVX"
+		},
+		{
+			"bankCode": "VNM00095",
+			"name": "Sinopac Bank",
+			"swiftCode": "SINOVNVX"
+		},
+		{
+			"bankCode": "VNM00096",
+			"name": "Bangkok Bank",
+			"swiftCode": "BKKBVNVX"
+		},
+		{
+			"bankCode": "VNM00097",
+			"name": "Sumitomo Mitsui Banking Corporation",
+			"swiftCode": "SMBCVNVX"
+		},
+		{
+			"bankCode": "VNM00053",
+			"napasCode": "555666",
+			"name": "Bank For Investment And Development Of Campuchia Ha Noi Branch"
+		},
+		{
+			"bankCode": "VNM00059",
+			"name": "Viet Hoa Commercial Joint Stock Bank"
+		},
+		{
+			"bankCode": "VNM00060",
+			"name": "Credit Agricole Cib"
+		},
+		{
+			"bankCode": "VNM00061",
+			"name": "Fubon Bank Ha Noi Branch"
+		},
+		{
+			"bankCode": "VNM00062",
+			"name": "Fubon Bank Ho Chi Minh Branch"
+		},
+		{
+			"bankCode": "VNM00063",
+			"name": "Vietnam State Treasury"
+		},
+		{
+			"bankCode": "VNM00064",
+			"name": "Korea Exchange Bank (Keb)"
+		},
+		{
+			"bankCode": "VNM00065",
+			"name": "Bank For Investment And Development Of Campuchia Ho Chi Minh Branch"
+		},
+		{
+			"bankCode": "VNM00066",
+			"name": "Huanan Commercial Bank"
+		},
+		{
+			"bankCode": "VNM00067",
+			"name": "Industrial and Commercial Bank of China - Ha Noi Branch"
+		},
+		{
+			"bankCode": "VNM00001",
+			"napasCode": "422589",
+			"name": "Cimb Bank (Vietnam) Limited",
+			"swiftCode": "CIBBVNVN"
+		},
+		{
+			"bankCode": "VNM00002",
+			"napasCode": "458761",
+			"name": "Hsbc Viet Nam",
+			"swiftCode": "HSBCVNVX"
+		},
+		{
+			"bankCode": "VNM00003",
+			"napasCode": "796500",
+			"name": "Dbs Bank Ltd",
+			"swiftCode": "DBSSVNVX"
+		},
+		{
+			"bankCode": "VNM00036",
+			"napasCode": "168999",
+			"name": "Cathay United Bank",
+			"swiftCode": "UWCBVNVX"
+		},
+		{
+			"bankCode": "VNM00037",
+			"napasCode": "533948",
+			"name": "Citibank Vietnam Ha Noi Branch",
+			"swiftCode": "CITIVNVXXXX"
+		},
+		{
+			"bankCode": "VNM00038",
+			"napasCode": "801011",
+			"name": "NongHyup Bank Ha Noi Branch",
+			"swiftCode": "NACFVNVH"
+		},
+		{
+			"bankCode": "VNM00039",
+			"napasCode": "963666",
+			"name": "Bnp Paribas Ho Chi Minh Branch",
+			"swiftCode": "BNPAVNVN"
+		},
+		{
+			"bankCode": "VNM00040",
+			"napasCode": "963668",
+			"name": "Bnp Paribas Ha Noi Branch",
+			"swiftCode": "BNPAVNVX"
+		},
+		{
+			"bankCode": "VNM00041",
+			"napasCode": "963688",
+			"name": "Bank Of China (Hong Kong) Limited",
+			"swiftCode": "BKCHVNVX"
+		}
+	],
+	"PHP": [
+		{
+			"code": "alamanah",
+			"name": "Al-Amanah Islamic Invest. Bank"
+		},
+		{
+			"code": "allbank",
+			"name": "AllBank (A Thrift Bank), Inc."
+		},
+		{
+			"code": "anz",
+			"name": "ANZ Banking Group Ltd"
+		},
+		{
+			"code": "guinobatan",
+			"name": "Asenso"
+		},
+		{
+			"code": "aub",
+			"name": "Asia United Bank"
+		},
+		{
+			"code": "bananapay",
+			"name": "BananaPay"
+		},
+		{
+			"code": "bangko_kabayan",
+			"name": "Bangko Kabayan"
+		},
+		{
+			"code": "bangkomabuhay",
+			"name": "Bangko Mabuhay"
+		},
+		{
+			"code": "nuestra_senora",
+			"name": "Bangko Nuestra Señora Del Pilar"
+		},
+		{
+			"code": "bangkokbank",
+			"name": "Bangkok Bank - Manila Branch"
+		},
+		{
+			"code": "bankofamerica",
+			"name": "Bank of America, N.A. - Manila Branch"
+		},
+		{
+			"code": "bankofchina",
+			"name": "Bank of China"
+		},
+		{
+			"code": "bankofcommerce",
+			"name": "Bank of Commerce"
+		},
+		{
+			"code": "bofz",
+			"name": "Bank of Florida"
+		},
+		{
+			"code": "bpibanko",
+			"name": "BanKo, A subsidiary of BPI"
+		},
+		{
+			"code": "bdouni",
+			"name": "BDO Bank"
+		},
+		{
+			"code": "bdo",
+			"name": "BDO Network Bank"
+		},
+		{
+			"code": "binangonan",
+			"name": "Binangonan Rural Bank (BRBDigital)"
+		},
+		{
+			"code": "bpi",
+			"name": "BPI"
+		},
+		{
+			"code": "camalig",
+			"name": "Camalig Bank"
+		},
+		{
+			"code": "cantilan",
+			"name": "Cantilan Bank"
+		},
+		{
+			"code": "cardbank",
+			"name": "CARD Bank"
+		},
+		{
+			"code": "sme",
+			"name": "CARD SME Bank"
+		},
+		{
+			"code": "cathay",
+			"name": "Cathay United Bank - Manila Branch"
+		},
+		{
+			"code": "cebuanal",
+			"name": "Cebuana Lhuillier Bank/ Cebuana Xpress"
+		},
+		{
+			"code": "chinabank",
+			"name": "China Bank"
+		},
+		{
+			"code": "chinabanksavings",
+			"name": "China Bank Savings"
+		},
+		{
+			"code": "cimb",
+			"name": "CIMB Bank Philippines"
+		},
+		{
+			"code": "cisbayad",
+			"name": "CIS Bayad Center/ Bayad"
+		},
+		{
+			"code": "citi",
+			"name": "Citibank, N.A. - Manila Branch"
+		},
+		{
+			"code": "citysavings",
+			"name": "City Savings Bank"
+		},
+		{
+			"code": "ctbc",
+			"name": "CTBC Bank (Philippines) Corp."
+		},
+		{
+			"code": "deutsche",
+			"name": "Deutsche Bank AG - Manila Branch"
+		},
+		{
+			"code": "dbp",
+			"name": "Development Bank of the Philippines"
+		},
+		{
+			"code": "dumaguetebankx",
+			"name": "Dumaguete Bank"
+		},
+		{
+			"code": "dungganon",
+			"name": "Dungganon Bank"
+		},
+		{
+			"code": "eastwest",
+			"name": "EastWest Bank"
+		},
+		{
+			"code": "easypay",
+			"name": "Easy Pay Global EMI Corp"
+		},
+		{
+			"code": "equicom",
+			"name": "Equicom Savings Bank"
+		},
+		{
+			"code": "first_consolidated",
+			"name": "First Consolidated Bank"
+		},
+		{
+			"code": "gcash",
+			"name": "GCash"
+		},
+		{
+			"code": "gotyme",
+			"name": "GoTyme Bank"
+		},
+		{
+			"code": "grabpay",
+			"name": "GrabPay"
+		},
+		{
+			"code": "guagua",
+			"name": "Guagua Rural Bank"
+		},
+		{
+			"code": "iremit",
+			"name": "I-Remit/iCASH"
+		},
+		{
+			"code": "ibk",
+			"name": "Industrial Bank of Korea - Manila"
+		},
+		{
+			"code": "infoserve",
+			"name": "Infoserve / Nationlink"
+		},
+		{
+			"code": "isla",
+			"name": "ISLABANK"
+		},
+		{
+			"code": "jpmorgan",
+			"name": "JP Morgan Chase Bank, N.A - Manila Branch"
+		},
+		{
+			"code": "zybi",
+			"name": "JuanCash"
+		},
+		{
+			"code": "kebhana",
+			"name": "KEB Hana Bank – Manila Branch"
+		},
+		{
+			"code": "eastwest_rural",
+			"name": "Komo/ EastWest Rural Bank"
+		},
+		{
+			"code": "laguna_prestige",
+			"name": "Laguna Prestige Bank"
+		},
+		{
+			"code": "landbank",
+			"name": "LANDBANK / OFBank"
+		},
+		{
+			"code": "lazada",
+			"name": "Lazada Wallet (Alipay Ph.)"
+		},
+		{
+			"code": "legazpi",
+			"name": "Legazpi Savings Bank"
+		},
+		{
+			"code": "malayan",
+			"name": "Malayan Bank Savings"
+		},
+		{
+			"code": "marcopay",
+			"name": "MarCoPay"
+		},
+		{
+			"code": "mayabank",
+			"name": "Maya Bank"
+		},
+		{
+			"code": "maybank",
+			"name": "Maybank"
+		},
+		{
+			"code": "megaintl",
+			"name": "Mega Int''l Commercial Bank - Manila Branch"
+		},
+		{
+			"code": "metrobank",
+			"name": "Metrobank"
+		},
+		{
+			"code": "mcb",
+			"name": "Mindanao Consolidated CoopBank"
+		},
+		{
+			"code": "mizuho",
+			"name": "Mizuho Bank, Ltd. – Manila Branch"
+		},
+		{
+			"code": "moneymall",
+			"name": "Money Mall Rural Bank, Inc."
+		},
+		{
+			"code": "mufg",
+			"name": "MUFG Bank, Ltd. - Manila Branch"
+		},
+		{
+			"code": "netbank",
+			"name": "NetBank"
+		},
+		{
+			"code": "omnipay",
+			"name": "Omnipay, Inc."
+		},
+		{
+			"code": "ownb",
+			"name": "Own Bank"
+		},
+		{
+			"code": "palawanpay",
+			"name": "PalawanPay"
+		},
+		{
+			"code": "partnerrb",
+			"name": "Partner Rural Bank (Cotabato), Inc."
+		},
+		{
+			"code": "paymaya",
+			"name": "PayMaya/ Maya Wallet"
+		},
+		{
+			"code": "PayMongo",
+			"name": "PayMongo"
+		},
+		{
+			"code": "pbcom",
+			"name": "PBCOM"
+		},
+		{
+			"code": "pdax",
+			"name": "PDAX"
+		},
+		{
+			"code": "veterans",
+			"name": "Philippine Veterans Bank"
+		},
+		{
+			"code": "philtrust",
+			"name": "PhilTrust Bank"
+		},
+		{
+			"code": "pnb",
+			"name": "PNB"
+		},
+		{
+			"code": "producers",
+			"name": "Producers Savings Bank Corporation"
+		},
+		{
+			"code": "psbank",
+			"name": "PSBank"
+		},
+		{
+			"code": "queenbank",
+			"name": "Queenbank"
+		},
+		{
+			"code": "quezonbank",
+			"name": "Quezon Capital Rural Bank"
+		},
+		{
+			"code": "rangay",
+			"name": "Rang-Ay Bank"
+		},
+		{
+			"code": "rbtbank",
+			"name": "RBT Bank"
+		},
+		{
+			"code": "rcbc",
+			"name": "RCBC / Diskartech"
+		},
+		{
+			"code": "robinsons",
+			"name": "Robinsons Bank"
+		},
+		{
+			"code": "digos",
+			"name": "Rural Bank of Digos"
+		},
+		{
+			"code": "montalban",
+			"name": "Rural Bank of Montalban"
+		},
+		{
+			"code": "rosario",
+			"name": "Rural Bank of Rosario (La Union), Inc."
+		},
+		{
+			"code": "silay",
+			"name": "Rural Bank of Silay City"
+		},
+		{
+			"code": "ignacia",
+			"name": "Rural Bank of Sta. Ignacia"
+		},
+		{
+			"code": "seabank",
+			"name": "Seabank"
+		},
+		{
+			"code": "security",
+			"name": "Security Bank"
+		},
+		{
+			"code": "shinhan",
+			"name": "Shinhan Bank – Manila Branch"
+		},
+		{
+			"code": "shopeepay",
+			"name": "ShopeePay"
+		},
+		{
+			"code": "smbc",
+			"name": "SMBC - Manila Branch"
+		},
+		{
+			"code": "speedypay",
+			"name": "SpeedyPay"
+		},
+		{
+			"code": "standard_chartered",
+			"name": "Standard Chartered Bank"
+		},
+		{
+			"code": "starpay",
+			"name": "Starpay"
+		},
+		{
+			"code": "sterling",
+			"name": "Sterling Bank of Asia"
+		},
+		{
+			"code": "sunsavings",
+			"name": "Sun Savings Bank"
+		},
+		{
+			"code": "tayocash",
+			"name": "TayoCash"
+		},
+		{
+			"code": "tonik",
+			"name": "Tonik Bank"
+		},
+		{
+			"code": "traxionpay",
+			"name": "TraxionPay/ DigiCOOP/ COOPNET"
+		},
+		{
+			"code": "ucpb",
+			"name": "UCPB Savings Bank"
+		},
+		{
+			"code": "unionbank",
+			"name": "Union Bank of the Philippines"
+		},
+		{
+			"code": "uniondigital",
+			"name": "UnionDigital Bank"
+		},
+		{
+			"code": "uob",
+			"name": "United Overseas Bank Limited, Manila Branch"
+		},
+		{
+			"code": "UNO",
+			"name": "UNOBank"
+		},
+		{
+			"code": "ussc",
+			"name": "USSC"
+		},
+		{
+			"code": "wealth",
+			"name": "Wealth Bank"
+		},
+		{
+			"code": "yuanta",
+			"name": "Yuanta Bank"
+		}
+	],
+	"PKR": [
+		{
+			"code": "PK005",
+			"name": "Advans Microfinance Bank"
+		},
+		{
+			"code": "PK008",
+			"name": "Al Baraka Islamic Bank"
+		},
+		{
+			"code": "PK009",
+			"name": "Bank Alfalah"
+		},
+		{
+			"code": "PK010",
+			"name": "Allied Bank Limited (ABL)"
+		},
+		{
+			"code": "PK011",
+			"name": "Apna Microfinance Bank"
+		},
+		{
+			"code": "PK012",
+			"name": "Askari Bank Limited"
+		},
+		{
+			"code": "PK013",
+			"name": "Bank of Khyber"
+		},
+		{
+			"code": "PK015",
+			"name": "Bank Islami Pakistan"
+		},
+		{
+			"code": "PK020",
+			"name": "Citi Bank"
+		},
+		{
+			"code": "PK021",
+			"name": "Dubai Islamic Bank"
+		},
+		{
+			"code": "PK024",
+			"name": "FINCA Microfinance Bank"
+		},
+		{
+			"code": "PK026",
+			"name": "First Women Bank"
+		},
+		{
+			"code": "PK027",
+			"name": "Faysal Bank Limited"
+		},
+		{
+			"code": "PK029",
+			"name": "Habib Bank Limited (HBL)"
+		},
+		{
+			"code": "PK031",
+			"name": "Habib Metropolitan Bank"
+		},
+		{
+			"code": "PK034",
+			"name": "ICBC"
+		},
+		{
+			"code": "PK035",
+			"name": "JS Bank"
+		},
+		{
+			"code": "PK042",
+			"name": "MCB Bank Limited"
+		},
+		{
+			"code": "PK043",
+			"name": "MCB Arif Habib"
+		},
+		{
+			"code": "PK044",
+			"name": "MCB Islamic Bank"
+		},
+		{
+			"code": "PK045",
+			"name": "Meezan Bank"
+		},
+		{
+			"code": "PK047",
+			"name": "NayaPay"
+		},
+		{
+			"code": "PK048",
+			"name": "National Bank of Pakistan (NBP)"
+		},
+		{
+			"code": "PK052",
+			"name": "NRSP Bank / Fori Cash"
+		},
+		{
+			"code": "PK058",
+			"name": "SadaPay"
+		},
+		{
+			"code": "PK059",
+			"name": "Standard Chartered Bank"
+		},
+		{
+			"code": "PK063",
+			"name": "Samba Bank"
+		},
+		{
+			"code": "PK064",
+			"name": "Silkbank"
+		},
+		{
+			"code": "PK065",
+			"name": "Sindh Bank"
+		},
+		{
+			"code": "PK066",
+			"name": "Soneri Bank Limited"
+		},
+		{
+			"code": "PK070",
+			"name": "United Bank Limited (UBL)"
+		},
+		{
+			"code": "PK071",
+			"name": "Upaisa"
+		}
+	]
+}

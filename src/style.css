@@ -1,0 +1,129 @@
+@layer reset, element, component.base, component.modifier, layout, modifier;
+
+@layer reset {
+	*, *::before, *::after { box-sizing: border-box }
+	html, body { margin: 0; min-block-size: 100% }
+	button, input { font: inherit }
+}
+
+@layer element {
+	:root {
+		--ink: #111827;
+		--muted: #667085;
+		--line: #d8dee8;
+		--surface: #fff;
+		--canvas: #f5f7fa;
+		--accent: #2457d6;
+		--accent-ink: #fff;
+		--success: #087a55;
+		--warning: #9a5b00;
+		--danger: #b42318;
+		--gap-xs: .5rem;
+		--gap-sm: .75rem;
+		--gap: 1rem;
+		--gap-md: 1.5rem;
+		--gap-lg: 2rem;
+		--page: 80rem;
+		font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+		color: var(--ink);
+		background: var(--canvas)
+	}
+
+	body { min-block-size: 100dvh }
+	a { color: var(--accent); text-underline-offset: .18em }
+	h1, h2, p { margin-block-start: 0 }
+	h1 { margin-block-end: 0; font-size: clamp(1.75rem, 3vw, 2.5rem); letter-spacing: -.04em }
+	h2 { margin-block-end: var(--gap); font-size: 1.05rem }
+	code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere }
+	table { inline-size: 100%; border-collapse: collapse }
+	th, td { padding: .8rem .6rem; border-block-end: 1px solid var(--line); text-align: start; white-space: nowrap }
+	th { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .06em }
+	label { display: grid; gap: .35rem; color: var(--muted); font-size: .85rem; font-weight: 650 }
+	input {
+		min-block-size: 2.75rem;
+		padding-inline: .75rem;
+		border: 1px solid var(--line);
+		border-radius: .35rem;
+		color: var(--ink);
+		background: var(--surface)
+	}
+	input:focus { outline: .15rem solid color-mix(in srgb, var(--accent) 28%, transparent); border-color: var(--accent) }
+}
+
+@layer component.base {
+	.topbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		min-block-size: 4.25rem;
+		padding-inline: max(var(--gap), calc((100% - var(--page)) / 2));
+		border-block-end: 1px solid var(--line);
+		background: var(--surface)
+	}
+	.topbar nav { display: flex; gap: var(--gap-md) }
+	.topbar nav a { color: var(--ink); font-weight: 650; text-decoration: none }
+	.brand { color: var(--ink); font-size: 1.2rem; font-weight: 800; letter-spacing: -.04em; text-decoration: none }
+	.brand span { color: var(--muted); font-weight: 500 }
+	.panel { padding: var(--gap-md); border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); box-shadow: 0 .15rem .5rem rgb(16 24 40 / .035) }
+	.panel > :last-child { margin-block-end: 0 }
+	.panel > span { color: var(--muted); font-size: .85rem }
+	.panel > strong { display: block; margin-block-start: .35rem; font-size: 1.45rem }
+	.button { min-block-size: 2.5rem; padding-inline: .9rem; border: 1px solid transparent; border-radius: .35rem; font-weight: 700; cursor: pointer }
+	.button:focus-visible { outline: .15rem solid color-mix(in srgb, var(--accent) 30%, transparent); outline-offset: .1rem }
+	.notice { display: grid; gap: var(--gap-xs); padding: var(--gap); border: 1px solid #f0c36d; border-radius: .45rem; color: #6b4200; background: #fff8e8 }
+	.notice code { display: block; padding: .65rem; color: var(--ink); background: #fff }
+	.status { display: inline-flex; align-items: center; gap: .4rem; color: var(--ink); font-size: .8rem; font-weight: 700 }
+	.status::before { content: ''; inline-size: .45rem; block-size: .45rem; border-radius: 50%; background: #64748b }
+	.form { display: flex; align-items: end; gap: var(--gap) }
+	.form label { flex: 1 }
+	.wallet, .datum, .key-row { display: flex; align-items: center; gap: var(--gap); padding-block: .8rem; border-block-start: 1px solid var(--line) }
+	.wallet > span, .datum > span { min-inline-size: 7rem; color: var(--muted) }
+	.wallet code, .datum strong, .datum code { flex: 1 }
+	.key-row { justify-content: space-between }
+	.key-row small { display: block; margin-block-start: .2rem; color: var(--muted) }
+}
+
+@layer component.modifier {
+	.button.solid { color: var(--accent-ink); background: var(--accent) }
+	.button.outlined { border-color: var(--line); color: var(--ink); background: var(--surface) }
+	.button.text { padding-inline: .35rem; color: var(--accent); background: transparent }
+	.button.danger { border-color: color-mix(in srgb, var(--danger) 25%, var(--line)); color: var(--danger); background: transparent }
+	.notice.warning { color: #6b4200; background: #fff8e8 }
+	.notice.success { border-color: #a6e3cd; color: #075e45; background: #ecfdf7 }
+	.status.success { color: var(--success) }
+	.status.success::before { background: var(--success) }
+	.status.danger { color: var(--danger) }
+	.status.danger::before { background: var(--danger) }
+	.status.muted { color: var(--muted) }
+}
+
+@layer layout {
+	.content { inline-size: min(100% - 2rem, var(--page)); margin-inline: auto; padding-block: var(--gap-lg) 4rem }
+	.heading, .section-title { display: flex; align-items: center; justify-content: space-between; gap: var(--gap); margin-block-end: var(--gap-md) }
+	.section-title { margin-block-end: var(--gap) }
+	.section-title h2 { margin: 0 }
+	.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); margin-block-end: var(--gap) }
+	.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); margin-block-end: var(--gap) }
+	.content > .panel, .content > .notice { margin-block-end: var(--gap) }
+	.table-wrap { overflow-x: auto }
+	.back { display: inline-block; margin-block-end: var(--gap); color: var(--muted); text-decoration: none }
+	@media (width < 48rem) {
+		.topbar { align-items: flex-start; padding-block: var(--gap) }
+		.topbar nav { gap: var(--gap) }
+		.metrics, .split { grid-template-columns: 1fr 1fr }
+		.form { align-items: stretch; flex-direction: column }
+	}
+	@media (width < 34rem) {
+		.metrics, .split { grid-template-columns: 1fr }
+	}
+}
+
+@layer modifier {
+	.eyebrow { margin-block-end: .3rem; color: var(--accent); font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase }
+	.muted, .empty { color: var(--muted) }
+	.empty { padding: var(--gap); text-align: center }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* { scroll-behavior: auto }
+}

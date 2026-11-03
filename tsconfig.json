@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"useDefineForClassFields": false,
+		"target": "ES2023",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"strict": true,
+		"noImplicitOverride": false,
+		"noEmit": true
+	},
+	"include": ["src/**/*.ts"]
+}

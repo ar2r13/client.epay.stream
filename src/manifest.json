@@ -1,0 +1,9 @@
+{
+	"name": "ePay Admin",
+	"short_name": "ePay",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#f5f7fa",
+	"theme_color": "#111827"
+}

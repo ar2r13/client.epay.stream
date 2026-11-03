@@ -1,0 +1,338 @@
+openapi: 3.1.0
+info:
+  title: ePay API
+  version: 1.0.0
+  description: White-label bank payout API. Amounts are decimal strings and deduction currency is always USDT.
+x-bank-directories:
+  description: Static bank code and display-name directories for corridors that use a controlled bank list.
+  url: /bank-directories.json
+  currencies: [IDR, VND, PHP, PKR]
+servers:
+  - url: https://api.epay.stream/api/v1
+security:
+  - ApiKey: []
+paths:
+  /balance:
+    get:
+      operationId: getBalance
+      responses:
+        '200':
+          description: Current balance and BEP-20 deposit address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+  /order:
+    post:
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '201':
+          description: Created or idempotently returned order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+  /tx/list:
+    get:
+      operationId: listTransactions
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: Cursor-paginated transactions
+  /tx/{id}:
+    get:
+      operationId: getTransaction
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          $ref: '#/components/responses/Error'
+  /tx/{id}/receipt:
+    get:
+      operationId: getReceipt
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: White-label PDF receipt for a paid transaction
+          content:
+            application/pdf: {}
+        '404':
+          $ref: '#/components/responses/Error'
+  /webhook:
+    put:
+      operationId: setWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+      responses:
+        '200':
+          description: Configuration and one-time signing secret
+  /webhook/rotate-secret:
+    post:
+      operationId: rotateWebhookSecret
+      responses:
+        '200':
+          description: New one-time signing secret
+webhooks:
+  clientEvents:
+    post:
+      parameters:
+        - in: header
+          name: X-EPay-Event-Id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: X-EPay-Event-Type
+          required: true
+          schema: { type: string, enum: [deposit.confirmed, order.updated] }
+        - in: header
+          name: X-EPay-Timestamp
+          required: true
+          schema: { type: string }
+        - in: header
+          name: X-EPay-Signature
+          required: true
+          description: v1=HMAC-SHA256(timestamp + "." + rawBody)
+          schema: { type: string }
+      responses:
+        '200': { description: Accepted }
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+  parameters:
+    TransactionId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+  responses:
+    Error:
+      description: Neutral ePay error; upstream errors are never exposed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Decimal:
+      type: string
+      pattern: '^(0|[1-9][0-9]*)(\.[0-9]+)?$'
+    Balance:
+      type: object
+      required: [asset, network, available, reserved, pending, deposit_address, updated_at, syncing]
+      properties:
+        asset: { const: USDT }
+        network: { const: BEP20 }
+        available: { $ref: '#/components/schemas/Decimal' }
+        reserved: { $ref: '#/components/schemas/Decimal' }
+        pending: { $ref: '#/components/schemas/Decimal' }
+        deposit_address: { type: string }
+        updated_at: { type: string, format: date-time }
+        syncing: { type: boolean }
+    CreateOrder:
+      type: object
+      additionalProperties: false
+      required: [reference_id, payout_amount, payout_currency, transaction_type, sender, beneficiary, is_recipient_self]
+      properties:
+        reference_id: { type: string }
+        payout_amount: { $ref: '#/components/schemas/Decimal' }
+        payout_currency:
+          type: string
+          enum: [IDR, INR, VND, PHP, CNY, GBP, EUR, USD, PKR]
+        transaction_type:
+          type: string
+          enum: [C2C, C2B, B2C, B2B]
+        sender:
+          $ref: '#/components/schemas/Sender'
+        beneficiary:
+          $ref: '#/components/schemas/Beneficiary'
+        is_recipient_self: { type: boolean }
+        message: { type: [string, 'null'] }
+    Sender:
+      type: object
+      description: >-
+        Personal senders require name, email, phone and phoneCountryCode plus the documented currency fields.
+        Business senders require accountType=BUSINESS, name, registrationNumber, country, address,
+        phoneCountryCode, mobileNumber and incorporationDate. Date values use YYYY-MM-DD.
+      additionalProperties: true
+      x-personal-required-by-currency:
+        IDR: [idSubType, idValue, nationality]
+        INR: [dateOfBirth, idSubType, idValue, nationality, address, city, country]
+        CNY: [firstName, lastName, dateOfBirth, gender, idType, idValue, idIssueCountry, nationality, country]
+        GBP: [firstName, lastName, dateOfBirth, idType, idValue, nationality, address, postalCode, city, country]
+        EUR: [firstName, lastName, dateOfBirth, idType, idValue, nationality, city, address, country, occupation]
+        USD: [firstName, lastName, dateOfBirth, idType, idValue, nationality, address, city, postalCode, region, country]
+      x-business-required-by-currency:
+        GBP: [city, zipCode]
+        EUR: [type, city, structure]
+        USD: [city, region, zipCode, structure]
+    Beneficiary:
+      oneOf:
+        - $ref: '#/components/schemas/IDRBeneficiary'
+        - $ref: '#/components/schemas/INRBeneficiary'
+        - $ref: '#/components/schemas/VNDBeneficiary'
+        - $ref: '#/components/schemas/PHPBeneficiary'
+        - $ref: '#/components/schemas/CNYBeneficiary'
+        - $ref: '#/components/schemas/GBPBeneficiary'
+        - $ref: '#/components/schemas/EURBeneficiary'
+        - $ref: '#/components/schemas/USDBeneficiary'
+        - $ref: '#/components/schemas/PKRBeneficiary'
+    BasicBankBeneficiary:
+      type: object
+      required: [accountType, accountNumber, bankCode, name]
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        accountNumber: { type: string }
+        bankCode: { type: string, description: Corridor bank code from the ePay bank directory }
+        name: { type: string }
+    IDRBeneficiary:
+      allOf:
+        - $ref: '#/components/schemas/BasicBankBeneficiary'
+      title: IDR Indonesian bank account
+    PHPBeneficiary:
+      allOf:
+        - $ref: '#/components/schemas/BasicBankBeneficiary'
+      title: PHP bank account
+    PKRBeneficiary:
+      allOf:
+        - $ref: '#/components/schemas/BasicBankBeneficiary'
+        - type: object
+          description: accountNumber must be a PK IBAN
+      title: PKR bank account
+    INRBeneficiary:
+      type: object
+      required: [accountType, name, transactionType]
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        name: { type: string }
+        transactionType: { const: IMPS }
+        vpa: { type: string }
+        accountNumber: { type: string }
+        ifsc: { type: string }
+      description: Supply either vpa or both accountNumber and ifsc.
+    VNDBeneficiary:
+      type: object
+      required: [accountType, name, accountNumber]
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        name: { type: string }
+        accountNumber: { type: string }
+        napasCode: { type: string }
+        bankCode: { type: string }
+        firstName: { type: string, description: Required for PERSONAL }
+        lastName: { type: string, description: Required for PERSONAL }
+      description: Supply napasCode or bankCode. Personal recipients also require firstName and lastName.
+    CNYBeneficiary:
+      type: object
+      required: [accountType, bankAccountNumber]
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        bankAccountNumber: { type: string }
+        idNumber: { type: string, description: Required for PERSONAL }
+        idType: { type: string, enum: ['2'], description: Required for PERSONAL }
+        nativeFirstName: { type: string, description: Required for PERSONAL }
+        nativeLastName: { type: string, description: Required for PERSONAL }
+        nativeName: { type: string, description: Required for BUSINESS }
+        registrationNumber: { type: string, description: Required for BUSINESS }
+    GBPBeneficiary:
+      type: object
+      required: [accountType, bankBranchCode, bankAccountNumber]
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        bankBranchCode: { type: string, description: UK sort code }
+        bankAccountNumber: { type: string }
+        firstName: { type: string, description: Required for PERSONAL }
+        lastName: { type: string, description: Required for PERSONAL }
+        dateOfBirth: { type: string, format: date, description: Required for PERSONAL }
+        name: { type: string, description: Required for BUSINESS }
+    EURBeneficiary:
+      type: object
+      required: [accountType, bankAccountNumber, address]
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        bankAccountNumber: { type: string }
+        address: { type: string }
+        firstName: { type: string, description: Required for PERSONAL }
+        lastName: { type: string, description: Required for PERSONAL }
+        dateOfBirth: { type: string, format: date, description: Required for PERSONAL }
+        idType: { type: string, description: Required for PERSONAL }
+        idNumber: { type: string, description: Required for PERSONAL }
+        name: { type: string, description: Required for BUSINESS }
+        structure: { type: string, description: Required for BUSINESS }
+        registrationNumber: { type: string, description: Required for BUSINESS }
+    USDBeneficiary:
+      type: object
+      required: [accountType, bankCode, bankAccountType, bankAccountNumber, region, city, address, zipCode]
+      description: >-
+        ACH/ABA payout. Personal recipients additionally require firstName, lastName, dateOfBirth,
+        phoneCountryCode, mobileNumber, idType, idNumber and nationality. Business recipients additionally
+        require name, registrationNumber, registrationCountry, phoneCountryCode, mobileNumber and structure.
+      properties:
+        accountType: { type: string, enum: [PERSONAL, BUSINESS] }
+        bankCode: { type: string, description: ABA routing number }
+        bankAccountType: { type: string }
+        bankAccountNumber: { type: string }
+        region: { type: string }
+        city: { type: string }
+        address: { type: string }
+        zipCode: { type: string }
+    Transaction:
+      type: object
+      required: [id, reference_id, status, payout_amount, payout_currency, deduction_currency, created_at, updated_at]
+      properties:
+        id: { type: string }
+        reference_id: { type: string }
+        status: { type: string, enum: [PENDING, PAID, CANCELLED, REVERSED, UNKNOWN] }
+        payout_amount: { $ref: '#/components/schemas/Decimal' }
+        payout_currency: { type: string }
+        deduction_currency: { const: USDT }
+        provider_debit: { type: [string, 'null'], description: Actual upstream debit, exposed without provider identity }
+        provider_fee: { type: [string, 'null'] }
+        commission_rate: { type: string }
+        commission_amount: { type: [string, 'null'] }
+        total_debit: { type: [string, 'null'] }
+        receipt_url: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, retryable]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            retryable: { type: boolean }
