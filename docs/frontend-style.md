@@ -107,52 +107,13 @@ CSS-to-CSS composition may use `@import` in shared stylesheet entrypoints.
 
 ## Design System Source
 
-The product's visual language is the Shuttle brand, as drawn in the Claude
-Design canvas "Shuttle — App screens"
-(`https://claude.ai/artifact/8sEwjCQdPb11LP3o6dzqyH`): desktop and mobile
-screens for every route plus sheets of card, deposit, KYC and global states.
-That canvas is the source of truth for layout, copy and states; its `app.css`
-holds the original values.
+Use the current project's design references and existing styles as the source for
+layout, copy, states, typography, and tokens. Keep project-specific references
+and brand rules separate from this reusable guide.
 
-Tokens live in `src/styles/variables.css` and are role-named:
-
-```text
---mate --blue --cyan --sky --surface --white     brand colours
---ok --warn --err                                status hues
---fg --fg-72 --fg-60 --fg-50 --line --tint       ink and hairlines derived from --mate
---font-sans (Inter) --font-display (Doppio One) --font-mono
---gap-* --page-max --gutter --header-h --control-h
---chamfer-x --chamfer-y                          the 30° cut corners of panels
-```
-
-The canvas's class layer is BEM and is *not* copied. Its values are
-re-expressed in this repository's trait vocabulary under `src/styles/`:
-
-```text
-src/styles/button.css     .button + solid accent dark light glass minor ghost danger large wide square
-src/styles/controls.css   .field .amount .select .chip .check .status .tag .badge .spinner .notice .avatar .segmented
-src/styles/surfaces.css   .panel (dark glass compact) .glow .hero .details .summary .entries .entry .steps .dialog
-src/styles/card.css       .virtual-card (frozen pending hold dead) .card-stage
-src/styles/shell.css      .topbar .primary-nav .tab-bar .shell .content .stack .row .split .display .lead .muted
-```
-
-Page sheets live next to their page (`src/pages/<page>/style.css`), are wrapped
-in `@scope (<page-tag>)`, and are imported from `src/style.css` because pages
-render in the light DOM and lazy chunks do not inject CSS.
-
-Constraints the design states, which application CSS must keep:
-
-- no rounded corners except the virtual card face; panels and dialogs use
-  chamfered corners instead
-- dark brand surfaces (`--mate`, hero image) carry cyan as the accent; light
-  surfaces carry `--blue`
-- every status is spelled out in text next to its colour dot, never colour alone
-- hashes and addresses truncate head/tail, keep the full value in `title`, and
-  have a copy affordance
-- one layout for every width: below 48rem the header nav becomes the bottom
-  tab bar and two-column splits stack
-
-Inter and Doppio One load from Google Fonts in `src/index.html`.
+Load colocated light-DOM styles through the project's stylesheet entry or route
+loader. Scope feature selectors to their owning element. Pair status colors with
+text, and keep truncated identifiers accessible and copyable.
 
 ## Design Tokens
 
@@ -160,8 +121,8 @@ CSS custom properties are the main visual contract.
 
 Name global tokens by semantic role.
 
-`src/styles/variables.css` already provides the global set; prefer its names
-(see Design System Source above). Add a global token only when no existing one
+`src/styles/variables.css` provides the global set when present. Prefer its names.
+Add a global token only when no existing one
 names the role, and add it there rather than to a feature stylesheet.
 
 Component-local variables should describe what they control:

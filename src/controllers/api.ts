@@ -56,12 +56,18 @@ export interface ClientDetail extends ClientSummary {
 }
 
 export interface TestPayout {
+	order_id? : string
+	client_id? : string
+	client_name? : string
+	reference_id? : string
 	merchant_reference_id : string
 	provider_id : string
 	status : string
 	rate : string
 	provider_debit : string
 	provider_fee : string
+	commission_amount? : string
+	total_debit? : string
 }
 
 const API_ORIGIN = location.hostname === 'admin.epay.stream'
@@ -129,13 +135,15 @@ class Api {
 			name : string
 			status : string
 			commission_percent : string
+			available_balance? : string
+			reserved_balance? : string
 			created_at : string
 		}> }>('/clients')
 
 		return { clients: data.items.map(client => ({
 			...client,
-			available_balance: '—',
-			reserved_balance: '—',
+			available_balance: client.available_balance ?? '—',
+			reserved_balance: client.reserved_balance ?? '—',
 			blocked: client.status !== 'ACTIVE'
 		})) }
 	}
