@@ -21,6 +21,14 @@ const routes : Route[] = [
 		}
 	},
 	{
+		pattern: new URLPattern({ pathname: '/test-payout' }),
+		load: async () => {
+			const { TestPayoutPage } = await import('./pages/test-payout/index.ts')
+
+			return new TestPayoutPage()
+		}
+	},
+	{
 		pattern: new URLPattern({ pathname: '/clients/:id' }),
 		load: async match => {
 			const { ClientPage } = await import('./pages/client/index.ts')
@@ -47,6 +55,7 @@ export class App extends OpenElement {
 				<nav aria-label=Primary>
 					<a href=/>Liquidity</a>
 					<a href=/clients>Clients</a>
+					${location.hostname === 'admin.epay.stream' ? null : html`<a href=/test-payout>Test payout</a>`}
 				</nav>
 			</header>
 			<main class=content aria-live=polite></main>

@@ -55,6 +55,15 @@ export interface ClientDetail extends ClientSummary {
 	orders : Order[]
 }
 
+export interface TestPayout {
+	merchant_reference_id : string
+	provider_id : string
+	status : string
+	rate : string
+	provider_debit : string
+	provider_fee : string
+}
+
 const API_ORIGIN = location.hostname === 'admin.epay.stream'
 	? 'https://api.epay.stream'
 	: location.hostname === 'dev-admin.epay.stream'
@@ -105,6 +114,13 @@ class Api {
 			gas_balance: data.gas_balance_bnb,
 			updated_at: data.updated_at
 		}))
+	}
+
+	testPayout (body : Record<string, unknown>) {
+		return this.request<TestPayout>('/test-payouts', {
+			method: 'POST',
+			body: JSON.stringify(body)
+		})
 	}
 
 	async clients () {
