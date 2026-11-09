@@ -1,3 +1,5 @@
+import { getEnvironment } from './environment.ts'
+
 export interface Liquidity {
 	provider_balance : string
 	provider_reserved : string
@@ -70,11 +72,7 @@ export interface TestPayout {
 	total_debit? : string
 }
 
-const API_ORIGIN = location.hostname === 'admin.epay.stream'
-	? 'https://api.epay.stream'
-	: location.hostname === 'dev-admin.epay.stream'
-	? 'https://dev-api.epay.stream'
-	: 'http://localhost:8787'
+const API_ORIGIN = getEnvironment().apiOrigin
 
 class Api {
 	async request<T> (path : string, init? : RequestInit) : Promise<T> {

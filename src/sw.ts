@@ -1,4 +1,4 @@
-const cacheName = 'epay-admin-v2'
+const cacheName = 'epay-admin-v3'
 const shell = ['/', '/style.css', '/index.js', '/manifest.json']
 
 self.addEventListener('install', event => {
