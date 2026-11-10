@@ -30,19 +30,31 @@ const FIELD_HINTS : Record<string, string> = {
 	registrationNumber: 'Company registration number', incorporationDate: 'Incorporation date, YYYY-MM-DD', structure: 'Company legal structure', type: 'Company type',
 	accountNumber: 'Recipient account number', bankAccountNumber: 'Recipient bank account number (IBAN where the country uses IBAN)',
 	bankCode: 'Recipient bank code', bankBranchCode: 'Bank branch code (sort code, BSB, …)', bankAccountType: 'Bank account type, e.g. CHECKING',
-	transactionType: 'Transfer rail, e.g. IMPS'
+	transactionType: 'Transfer rail, e.g. IMPS',
+	ifsc: 'IFSC code (with accountNumber)', vpa: 'UPI address (instead of accountNumber + IFSC)',
+	napasCode: 'NAPAS bank code (or bankCode)', swiftCode: 'SWIFT / BIC code'
 }
 
-const parseObject = (value : string) : Record<string, unknown> | null => {
-	try {
-		const parsed = JSON.parse(value)
-		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null
-	} catch {
-		return null
-	}
+// Fields that are not on the required list but that a corridor rule needs (see /payout-requirements rules).
+const OPTIONAL_FIELDS : Record<string, { sender? : string[], beneficiary? : string[] }> = {
+	INR: { beneficiary: ['accountNumber', 'ifsc', 'vpa'] },
+	VND: { beneficiary: ['napasCode', 'bankCode'] },
+	EUR: { beneficiary: ['swiftCode'] }
 }
+
+type Party = 'sender' | 'beneficiary'
+type Values = Record<string, string>
 
 const filled = (value : unknown) => value !== undefined && value !== null && value !== ''
+
+const label = (field : string) => field
+	.replace(/([a-z])([A-Z])/g, '$1 $2')
+	.replace(/^./, char => char.toUpperCase())
+
+const isDate = (field : string) => field === 'dateOfBirth' || field.endsWith('Date')
+
+const toValues = (value : Record<string, unknown>) : Values =>
+	Object.fromEntries(Object.entries(value).map(([key, item]) => [key, String(item)]))
 
 const PRESETS : Record<string, Preset> = {
 	IDR: {
@@ -472,8 +484,8 @@ export class TestPayoutPage extends OpenElement {
 	@state() private transactionType = 'C2C'
 	@state() private requirements : PayoutRequirement[] = []
 	@state() private amount = IS_PROD ? '' : PRESETS.IDR.amount
-	@state() private senderJson = IS_PROD ? '{}' : JSON.stringify(PRESETS.IDR.sender, null, 2)
-	@state() private beneficiaryJson = IS_PROD ? '{}' : JSON.stringify(PRESETS.IDR.beneficiary, null, 2)
+	@state() private sender : Values = IS_PROD ? {} : toValues(PRESETS.IDR.sender)
+	@state() private beneficiary : Values = IS_PROD ? {} : toValues(PRESETS.IDR.beneficiary)
 	@state() private error = ''
 	@state() private result : TestPayout | null = null
 	@state() private submitting = false
@@ -493,37 +505,68 @@ export class TestPayoutPage extends OpenElement {
 		return this.requirement?.transaction_types.find(item => item.transaction_type === this.transactionType)
 	}
 
-	private addMissing (party : 'sender' | 'beneficiary') {
+	private accountType (party : Party) {
 		const corridor = this.corridor
-		if (!corridor) return
-		const key = party === 'sender' ? 'senderJson' : 'beneficiaryJson'
-		const value = parseObject(this[key])
-		if (!value) {
-			this.error = `${party === 'sender' ? 'Sender' : 'Beneficiary'} JSON is not a valid object.`
-			return
-		}
-		const accountType = party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type
-		for (const field of corridor[party])
-			if (!filled(value[field])) value[field] = field === 'accountType' ? accountType : ''
-		this[key] = JSON.stringify(value, null, 2)
+		if (corridor) return party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type
+		return (party === 'sender' ? this.transactionType[0] : this.transactionType[2]) === 'B' ? 'BUSINESS' : 'PERSONAL'
 	}
 
-	private renderFields (party : 'sender' | 'beneficiary') {
-		const corridor = this.corridor
-		if (!corridor) return null
-		const value = parseObject(party === 'sender' ? this.senderJson : this.beneficiaryJson)
-		const missing = corridor[party].filter(field => !value || !filled(value[field])).length
+	private required (party : Party) {
+		return (this.corridor?.[party] ?? []).filter(field => field !== 'accountType')
+	}
+
+	/** Required fields, then corridor-specific optional ones. Before requirements load: whatever the preset has. */
+	private fields (party : Party) {
+		const required = this.required(party)
+		const optional = [...(OPTIONAL_FIELDS[this.currency]?.[party] ?? []), ...(this.corridor ? [] : Object.keys(this[party]))]
+			.filter(field => field !== 'accountType' && !required.includes(field))
+		return { required, optional: [...new Set(optional)] }
+	}
+
+	private setValue (party : Party, field : string, value : string) {
+		this[party] = { ...this[party], [field]: value }
+	}
+
+	/** Only the fields shown for the current corridor, non-empty, plus accountType from the transaction type. */
+	private payload (party : Party) {
+		const { required, optional } = this.fields(party)
+		const values = this[party]
+		const result : Record<string, string> = { accountType: this.accountType(party) }
+		for (const field of [...required, ...optional])
+			if (filled(values[field]?.trim())) result[field] = values[field].trim()
+		return result
+	}
+
+	private renderInput (party : Party, field : string, required : boolean) {
+		const value = this[party][field] ?? ''
+		const hint = FIELD_HINTS[field] ?? ''
 		return html`
-			<div class=required-fields>
-				<div class=required-head>
-					<strong>${party === 'sender' ? 'Sender' : 'Beneficiary'} · ${party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type}</strong>
-					<span class=${missing ? 'status danger' : 'status success'}>${value ? missing ? `${missing} missing` : 'complete' : 'invalid JSON'}</span>
-					${missing ? html`<button class='button text' type=button @click=${() => this.addMissing(party)}>Add missing</button>` : null}
-				</div>
-				<ul>
-					${corridor[party].map(field => html`<li class=${value && filled(value[field]) ? 'ok' : 'missing'} title=${FIELD_HINTS[field] ?? ''}><code>${field}</code><span>${FIELD_HINTS[field] ?? ''}</span></li>`)}
-				</ul>
-			</div>
+			<label class=${required && !filled(value.trim()) ? 'field missing' : 'field'} title=${hint}>
+				<span>${label(field)}${required ? html` <b class=required-mark>*</b>` : null}</span>
+				<input
+					type=${isDate(field) ? 'date' : field === 'email' ? 'email' : 'text'}
+					autocomplete=off
+					?required=${required}
+					placeholder=${hint}
+					.value=${value}
+					@input=${(e : Event) => this.setValue(party, field, (e.currentTarget as HTMLInputElement).value)}>
+			</label>
+		`
+	}
+
+	private renderParty (party : Party) {
+		const { required, optional } = this.fields(party)
+		const missing = required.filter(field => !filled(this[party][field]?.trim())).length
+		return html`
+			<fieldset class=party>
+				<legend>${party === 'sender' ? 'Sender' : 'Beneficiary'} · ${this.accountType(party)}</legend>
+				${this.corridor ? html`<span class=${missing ? 'status danger' : 'status success'}>${missing ? `${missing} missing` : 'complete'}</span>` : null}
+				<div class=fields>${required.map(field => this.renderInput(party, field, true))}</div>
+				${optional.length ? html`
+					${required.length ? html`<p class='eyebrow optional'>Optional</p>` : null}
+					<div class=fields>${optional.map(field => this.renderInput(party, field, false))}</div>
+				` : null}
+			</fieldset>
 		`
 	}
 
@@ -547,26 +590,27 @@ export class TestPayoutPage extends OpenElement {
 		const preset = PRESETS[next]
 		if (preset && !IS_PROD) {
 			this.amount = preset.amount
-			this.senderJson = JSON.stringify(preset.sender, null, 2)
-			this.beneficiaryJson = JSON.stringify(preset.beneficiary, null, 2)
+			this.sender = toValues(preset.sender)
+			this.beneficiary = toValues(preset.beneficiary)
 		}
 	}
 
 	private async create (event : SubmitEvent) {
 		event.preventDefault()
+		const form = new FormData(event.currentTarget as HTMLFormElement)
 		if (IS_PROD) {
-			const data = new FormData(event.currentTarget as HTMLFormElement)
-			const client = this.clients.find(item => item.id === String(data.get('client_id') || ''))
+			const client = this.clients.find(item => item.id === String(form.get('client_id') || ''))
 			if (!client) {
 				this.error = 'Select a client.'
 				return
 			}
-			if (!confirm(`Create a REAL payout of ${data.get('payout_amount')} ${data.get('payout_currency')} for ${client.name}? It will be reserved from the client's balance and sent to PEXX.`)) return
+			if (!confirm(`Create a REAL payout of ${form.get('payout_amount')} ${form.get('payout_currency')} for ${client.name}? It will be reserved from the client's balance and sent to PEXX.`)) return
 		}
 		this.error = ''
 		this.result = null
 		this.submitting = true
-		const form = new FormData(event.currentTarget as HTMLFormElement)
+		const sender = this.payload('sender')
+		const beneficiary = this.payload('beneficiary')
 
 		try {
 			this.result = await (IS_PROD ? api.createPayout : api.testPayout).call(api, {
@@ -580,12 +624,9 @@ export class TestPayoutPage extends OpenElement {
 				deductionCurrency: 'USDT',
 				transaction_type: String(form.get('transaction_type')),
 				transactionType: String(form.get('transaction_type')),
-				sender: JSON.parse(String(form.get('sender'))),
-				beneficiary: JSON.parse(String(form.get('beneficiary'))),
-				beneficiaryMethod: {
-					...JSON.parse(String(form.get('beneficiary'))),
-					currency: String(form.get('payout_currency'))
-				},
+				sender,
+				beneficiary,
+				beneficiaryMethod: { ...beneficiary, currency: String(form.get('payout_currency')) },
 				is_recipient_self: form.get('is_recipient_self') === 'on',
 				isRecipientSelf: form.get('is_recipient_self') === 'on',
 				message: String(form.get('message')) || null
@@ -593,7 +634,7 @@ export class TestPayoutPage extends OpenElement {
 			this.reference = `${IS_PROD ? 'admin' : 'test'}-${crypto.randomUUID()}`
 			await this.loadClients()
 		} catch (error) {
-			this.error = error instanceof SyntaxError ? 'Sender and beneficiary must be valid JSON.' : (error as Error).message
+			this.error = (error as Error).message
 		} finally {
 			this.submitting = false
 		}
@@ -631,17 +672,8 @@ export class TestPayoutPage extends OpenElement {
 					<label>Currency<select name=payout_currency .value=${this.currency} @change=${this.onCurrencyChange}><option>IDR</option><option>PHP</option><option>INR</option><option>VND</option><option>CNY</option><option>GBP</option><option>EUR</option><option>USD</option><option>PKR</option><option>AED</option><option>AUD</option><option>THB</option><option>JPY</option><option>MYR</option><option>CAD</option><option>KRW</option><option>HKD</option></select></label>
 					<label>Transaction type<select name=transaction_type .value=${this.transactionType} @change=${(e : Event) => { this.transactionType = (e.currentTarget as HTMLSelectElement).value }}>${(this.requirement?.transaction_types.map(item => item.transaction_type) ?? ['C2C', 'C2B', 'B2C', 'B2B']).map(type => html`<option ?selected=${type === this.transactionType}>${type}</option>`)}</select></label>
 				</div>
-				<div class=split>
-					<label>Sender JSON<textarea name=sender required .value=${this.senderJson} @input=${(e : Event) => { this.senderJson = (e.currentTarget as HTMLTextAreaElement).value }}></textarea></label>
-					<label>Beneficiary JSON<textarea name=beneficiary required .value=${this.beneficiaryJson} @input=${(e : Event) => { this.beneficiaryJson = (e.currentTarget as HTMLTextAreaElement).value }}></textarea></label>
-				</div>
-				${this.corridor ? html`
-					<section class=requirements aria-label='Required fields'>
-						<p class=eyebrow>Required for ${this.currency} ${this.transactionType}</p>
-						<div class=split>${this.renderFields('sender')}${this.renderFields('beneficiary')}</div>
-						${this.requirement?.rules.length ? html`<ul class=rules>${this.requirement.rules.map(rule => html`<li>${rule}</li>`)}</ul>` : null}
-					</section>
-				` : null}
+				<div class=split>${this.renderParty('sender')}${this.renderParty('beneficiary')}</div>
+				${this.requirement?.rules.length ? html`<ul class=rules>${this.requirement.rules.map(rule => html`<li>${rule}</li>`)}</ul>` : null}
 				<label>Message<input name=message autocomplete=off value=${IS_PROD ? '' : 'Sandbox test payout'}></label>
 				<label><span><input name=is_recipient_self type=checkbox> Sender and recipient are the same person</span></label>
 				<button class='button solid' type=submit ?disabled=${this.submitting}>${this.submitting ? 'Submitting…' : IS_PROD ? 'Create payout' : 'Create test payout'}</button>
