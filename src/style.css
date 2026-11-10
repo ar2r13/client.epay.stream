@@ -84,7 +84,7 @@
 	.payout-form { display: grid; gap: var(--gap) }
 	.party { display: grid; align-content: start; gap: .75rem; min-inline-size: 0; margin: 0; padding: var(--gap); border: 1px solid var(--line); border-radius: .45rem }
 	.party legend { padding-inline: .35rem; font-weight: 800 }
-	.party > .status { justify-self: start }
+	.party-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .85rem }
 	.party .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: .75rem }
 	.party .field { display: grid; gap: .3rem; font-size: .85rem }
 	.party .field.missing :is(input, select) { border-color: var(--danger) }

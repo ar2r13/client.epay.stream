@@ -8,6 +8,27 @@ import { getEnvironment } from '../../controllers/environment.ts'
 
 const IS_PROD = getEnvironment().id === 'prod'
 
+// Sender details typed on this screen, kept in this browser only (one set per environment).
+const SENDER_KEY = `epay-test-payout-sender:${getEnvironment().id}`
+
+const loadSender = () : Values => {
+	try {
+		const parsed = JSON.parse(localStorage.getItem(SENDER_KEY) ?? 'null')
+		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+	} catch {
+		return {}
+	}
+}
+
+const saveSender = (value : Values | null) => {
+	try {
+		if (value) localStorage.setItem(SENDER_KEY, JSON.stringify(value))
+		else localStorage.removeItem(SENDER_KEY)
+	} catch {
+		// Storage can be blocked; the form still works without it.
+	}
+}
+
 interface Preset {
 	amount : string
 	sender : Record<string, unknown>
@@ -493,7 +514,8 @@ export class TestPayoutPage extends OpenElement {
 	@state() private transactionType = 'C2C'
 	@state() private requirements : PayoutRequirement[] = []
 	@state() private amount = IS_PROD ? '' : PRESETS.IDR.amount
-	@state() private sender : Values = IS_PROD ? {} : toValues(PRESETS.IDR.sender)
+	@state() private sender : Values = { ...(IS_PROD ? {} : toValues(PRESETS.IDR.sender)), ...loadSender() }
+	@state() private senderSaved = Object.keys(loadSender()).length > 0
 	@state() private beneficiary : Values = IS_PROD ? {} : toValues(PRESETS.IDR.beneficiary)
 	@state() private error = ''
 	@state() private result : TestPayout | null = null
@@ -534,6 +556,18 @@ export class TestPayoutPage extends OpenElement {
 
 	private setValue (party : Party, field : string, value : string) {
 		this[party] = { ...this[party], [field]: value }
+		if (party === 'sender') {
+			const { accountType: _, ...sender } = this.sender
+			saveSender(sender)
+			this.senderSaved = true
+		}
+	}
+
+	private forgetSender () {
+		saveSender(null)
+		this.senderSaved = false
+		const preset = PRESETS[this.currency]
+		this.sender = preset && !IS_PROD ? toValues(preset.sender) : {}
 	}
 
 	/** Only the fields shown for the current corridor, non-empty, plus accountType from the transaction type. */
@@ -587,7 +621,10 @@ export class TestPayoutPage extends OpenElement {
 		return html`
 			<fieldset class=party>
 				<legend>${party === 'sender' ? 'Sender' : 'Beneficiary'} · ${this.accountType(party)}</legend>
-				${this.corridor ? html`<span class=${missing ? 'status danger' : 'status success'}>${missing ? `${missing} missing` : 'complete'}</span>` : null}
+				<div class=party-head>
+					${this.corridor ? html`<span class=${missing ? 'status danger' : 'status success'}>${missing ? `${missing} missing` : 'complete'}</span>` : null}
+					${party === 'sender' && this.senderSaved ? html`<span class=muted>Saved in this browser</span><button class='button text' type=button @click=${this.forgetSender}>Clear</button>` : null}
+				</div>
 				<div class=fields>${required.map(field => this.renderInput(party, field, true))}</div>
 				${optional.length ? html`
 					${required.length ? html`<p class='eyebrow optional'>Optional</p>` : null}
@@ -617,7 +654,7 @@ export class TestPayoutPage extends OpenElement {
 		const preset = PRESETS[next]
 		if (preset && !IS_PROD) {
 			this.amount = preset.amount
-			this.sender = toValues(preset.sender)
+			this.sender = { ...toValues(preset.sender), ...loadSender() }
 			this.beneficiary = toValues(preset.beneficiary)
 		}
 	}
