@@ -1,6 +1,6 @@
 import { html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
-import { api, type ClientSummary, type TestPayout } from '../../controllers/api.ts'
+import { api, type ClientSummary, type PayoutRequirement, type TestPayout } from '../../controllers/api.ts'
 import { money, short } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
 import { copyButton } from '../../lib/copy.ts'
@@ -13,6 +13,36 @@ interface Preset {
 	sender : Record<string, unknown>
 	beneficiary : Record<string, unknown>
 }
+
+// Plain-language hints for field names. Required lists come from the API (/payout-requirements).
+const FIELD_HINTS : Record<string, string> = {
+	accountType: 'PERSONAL or BUSINESS, set by the transaction type',
+	name: 'Full name (or company name for BUSINESS)',
+	firstName: 'First name', lastName: 'Last name',
+	nativeFirstName: 'First name in Chinese characters', nativeLastName: 'Last name in Chinese characters', nativeName: 'Company name in Chinese characters',
+	email: 'Email', phone: 'Phone number with country code', phoneCountryCode: 'Country dialling code, e.g. +65', mobileNumber: 'Mobile number',
+	dateOfBirth: 'Date of birth, YYYY-MM-DD', gender: 'Gender',
+	idType: 'ID document type code from the PEXX list', idSubType: 'ID document sub-type, e.g. PASSPORT', idValue: 'ID document number', idNumber: 'ID document number',
+	idIssueDate: 'ID issue date, YYYY-MM-DD', idExpireDate: 'ID expiry date, YYYY-MM-DD', idIssueCountry: 'Country that issued the ID',
+	nationality: 'Nationality, ISO 3166 alpha-3 (e.g. SGP)', country: 'Country of residence, ISO alpha-3', registrationCountry: 'Country of registration, ISO alpha-3',
+	address: 'Street address', city: 'City', region: 'State or region', zipCode: 'Postal code', postalCode: 'Postal code',
+	occupation: 'Occupation', remark: 'Free-text remark',
+	registrationNumber: 'Company registration number', incorporationDate: 'Incorporation date, YYYY-MM-DD', structure: 'Company legal structure', type: 'Company type',
+	accountNumber: 'Recipient account number', bankAccountNumber: 'Recipient bank account number (IBAN where the country uses IBAN)',
+	bankCode: 'Recipient bank code', bankBranchCode: 'Bank branch code (sort code, BSB, …)', bankAccountType: 'Bank account type, e.g. CHECKING',
+	transactionType: 'Transfer rail, e.g. IMPS'
+}
+
+const parseObject = (value : string) : Record<string, unknown> | null => {
+	try {
+		const parsed = JSON.parse(value)
+		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null
+	} catch {
+		return null
+	}
+}
+
+const filled = (value : unknown) => value !== undefined && value !== null && value !== ''
 
 const PRESETS : Record<string, Preset> = {
 	IDR: {
@@ -439,6 +469,8 @@ export class TestPayoutPage extends OpenElement {
 	@state() private clients : ClientSummary[] = []
 	@state() private selectedClientId = ''
 	@state() private currency = 'IDR'
+	@state() private transactionType = 'C2C'
+	@state() private requirements : PayoutRequirement[] = []
 	@state() private amount = IS_PROD ? '' : PRESETS.IDR.amount
 	@state() private senderJson = IS_PROD ? '{}' : JSON.stringify(PRESETS.IDR.sender, null, 2)
 	@state() private beneficiaryJson = IS_PROD ? '{}' : JSON.stringify(PRESETS.IDR.beneficiary, null, 2)
@@ -450,6 +482,49 @@ export class TestPayoutPage extends OpenElement {
 	connectedCallback () {
 		super.connectedCallback()
 		this.loadClients()
+		api.payoutRequirements().then(items => { this.requirements = items }).catch(() => {})
+	}
+
+	private get requirement () {
+		return this.requirements.find(item => item.currency === this.currency)
+	}
+
+	private get corridor () {
+		return this.requirement?.transaction_types.find(item => item.transaction_type === this.transactionType)
+	}
+
+	private addMissing (party : 'sender' | 'beneficiary') {
+		const corridor = this.corridor
+		if (!corridor) return
+		const key = party === 'sender' ? 'senderJson' : 'beneficiaryJson'
+		const value = parseObject(this[key])
+		if (!value) {
+			this.error = `${party === 'sender' ? 'Sender' : 'Beneficiary'} JSON is not a valid object.`
+			return
+		}
+		const accountType = party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type
+		for (const field of corridor[party])
+			if (!filled(value[field])) value[field] = field === 'accountType' ? accountType : ''
+		this[key] = JSON.stringify(value, null, 2)
+	}
+
+	private renderFields (party : 'sender' | 'beneficiary') {
+		const corridor = this.corridor
+		if (!corridor) return null
+		const value = parseObject(party === 'sender' ? this.senderJson : this.beneficiaryJson)
+		const missing = corridor[party].filter(field => !value || !filled(value[field])).length
+		return html`
+			<div class=required-fields>
+				<div class=required-head>
+					<strong>${party === 'sender' ? 'Sender' : 'Beneficiary'} · ${party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type}</strong>
+					<span class=${missing ? 'status danger' : 'status success'}>${value ? missing ? `${missing} missing` : 'complete' : 'invalid JSON'}</span>
+					${missing ? html`<button class='button text' type=button @click=${() => this.addMissing(party)}>Add missing</button>` : null}
+				</div>
+				<ul>
+					${corridor[party].map(field => html`<li class=${value && filled(value[field]) ? 'ok' : 'missing'} title=${FIELD_HINTS[field] ?? ''}><code>${field}</code><span>${FIELD_HINTS[field] ?? ''}</span></li>`)}
+				</ul>
+			</div>
+		`
 	}
 
 	private async loadClients () {
@@ -467,6 +542,8 @@ export class TestPayoutPage extends OpenElement {
 	private onCurrencyChange (event : Event) {
 		const next = (event.currentTarget as HTMLSelectElement).value
 		this.currency = next
+		const types = this.requirement?.transaction_types.map(item => item.transaction_type) ?? []
+		if (types.length && !types.includes(this.transactionType)) this.transactionType = types[0]
 		const preset = PRESETS[next]
 		if (preset && !IS_PROD) {
 			this.amount = preset.amount
@@ -551,12 +628,19 @@ export class TestPayoutPage extends OpenElement {
 				</div>
 				<div class=split>
 					<label>Currency<select name=payout_currency .value=${this.currency} @change=${this.onCurrencyChange}><option>IDR</option><option>PHP</option><option>INR</option><option>VND</option><option>CNY</option><option>GBP</option><option>EUR</option><option>USD</option><option>PKR</option><option>AED</option><option>AUD</option><option>THB</option><option>JPY</option><option>MYR</option><option>CAD</option><option>KRW</option><option>HKD</option></select></label>
-					<label>Transaction type<select name=transaction_type><option>C2C</option><option>C2B</option><option>B2C</option><option>B2B</option></select></label>
+					<label>Transaction type<select name=transaction_type .value=${this.transactionType} @change=${(e : Event) => { this.transactionType = (e.currentTarget as HTMLSelectElement).value }}>${(this.requirement?.transaction_types.map(item => item.transaction_type) ?? ['C2C', 'C2B', 'B2C', 'B2B']).map(type => html`<option ?selected=${type === this.transactionType}>${type}</option>`)}</select></label>
 				</div>
 				<div class=split>
 					<label>Sender JSON<textarea name=sender required .value=${this.senderJson} @input=${(e : Event) => { this.senderJson = (e.currentTarget as HTMLTextAreaElement).value }}></textarea></label>
 					<label>Beneficiary JSON<textarea name=beneficiary required .value=${this.beneficiaryJson} @input=${(e : Event) => { this.beneficiaryJson = (e.currentTarget as HTMLTextAreaElement).value }}></textarea></label>
 				</div>
+				${this.corridor ? html`
+					<section class=requirements aria-label='Required fields'>
+						<p class=eyebrow>Required for ${this.currency} ${this.transactionType}</p>
+						<div class=split>${this.renderFields('sender')}${this.renderFields('beneficiary')}</div>
+						${this.requirement?.rules.length ? html`<ul class=rules>${this.requirement.rules.map(rule => html`<li>${rule}</li>`)}</ul>` : null}
+					</section>
+				` : null}
 				<label>Message<input name=message autocomplete=off value=${IS_PROD ? '' : 'Sandbox test payout'}></label>
 				<label><span><input name=is_recipient_self type=checkbox> Sender and recipient are the same person</span></label>
 				<button class='button solid' type=submit ?disabled=${this.submitting}>${this.submitting ? 'Submitting…' : IS_PROD ? 'Create payout' : 'Create test payout'}</button>

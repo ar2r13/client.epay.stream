@@ -82,6 +82,16 @@
 	.form { display: flex; align-items: end; gap: var(--gap) }
 	.form label { flex: 1 }
 	.payout-form { display: grid; gap: var(--gap) }
+	.requirements { padding: var(--gap); border: 1px solid var(--line); border-radius: .45rem }
+	.requirements .split { margin-block-end: 0 }
+	.required-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-xs) var(--gap); margin-block-end: .5rem }
+	.required-fields ul, .requirements .rules { margin: 0; padding: 0; list-style: none }
+	.required-fields li { display: flex; gap: .5rem; padding-block: .2rem; font-size: .85rem }
+	.required-fields li::before { content: '✓'; inline-size: 1rem; color: var(--success); font-weight: 800 }
+	.required-fields li.missing::before { content: '✗'; color: var(--danger) }
+	.required-fields li span { color: var(--muted) }
+	.requirements .rules { margin-block-start: .75rem; color: var(--muted); font-size: .85rem }
+	.requirements .rules li::before { content: '• ' }
 	.wallet, .datum, .key-row { display: flex; align-items: center; gap: var(--gap); padding-block: .8rem; border-block-start: 1px solid var(--line) }
 	.wallet > span, .datum > span { min-inline-size: 7rem; color: var(--muted) }
 	.wallet code, .datum strong, .datum code { flex: 1 }

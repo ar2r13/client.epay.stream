@@ -12,6 +12,20 @@ export interface Liquidity {
 	updated_at : string
 }
 
+export interface CorridorRequirement {
+	transaction_type : string
+	sender_account_type : string
+	beneficiary_account_type : string
+	sender : string[]
+	beneficiary : string[]
+}
+
+export interface PayoutRequirement {
+	currency : string
+	transaction_types : CorridorRequirement[]
+	rules : string[]
+}
+
 export interface ApiKey {
 	id : string
 	prefix : string
@@ -118,6 +132,10 @@ class Api {
 			gas_balance: data.gas_balance_bnb,
 			updated_at: data.updated_at
 		}))
+	}
+
+	payoutRequirements () {
+		return this.request<{ currencies : PayoutRequirement[] }>('/payout-requirements').then(data => data.currencies)
 	}
 
 	testPayout (body : Record<string, unknown>) {
