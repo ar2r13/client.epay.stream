@@ -127,6 +127,13 @@ class Api {
 		})
 	}
 
+	createPayout (body : Record<string, unknown>) {
+		return this.request<TestPayout>('/payouts', {
+			method: 'POST',
+			body: JSON.stringify(body)
+		})
+	}
+
 	async clients () {
 		const data = await this.request<{ items : Array<{
 			id : string

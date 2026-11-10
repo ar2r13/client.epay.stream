@@ -3,6 +3,9 @@ import { customElement, state } from 'lit/decorators.js'
 import { api, type ClientSummary, type TestPayout } from '../../controllers/api.ts'
 import { money, short } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
+import { getEnvironment } from '../../controllers/environment.ts'
+
+const IS_PROD = getEnvironment().id === 'prod'
 
 interface Preset {
 	amount : string
@@ -238,13 +241,13 @@ export class TestPayoutPage extends OpenElement {
 	@state() private clients : ClientSummary[] = []
 	@state() private selectedClientId = ''
 	@state() private currency = 'IDR'
-	@state() private amount = PRESETS.IDR.amount
-	@state() private senderJson = JSON.stringify(PRESETS.IDR.sender, null, 2)
-	@state() private beneficiaryJson = JSON.stringify(PRESETS.IDR.beneficiary, null, 2)
+	@state() private amount = IS_PROD ? '' : PRESETS.IDR.amount
+	@state() private senderJson = IS_PROD ? '{}' : JSON.stringify(PRESETS.IDR.sender, null, 2)
+	@state() private beneficiaryJson = IS_PROD ? '{}' : JSON.stringify(PRESETS.IDR.beneficiary, null, 2)
 	@state() private error = ''
 	@state() private result : TestPayout | null = null
 	@state() private submitting = false
-	@state() private reference = `test-${crypto.randomUUID()}`
+	@state() private reference = `${IS_PROD ? 'admin' : 'test'}-${crypto.randomUUID()}`
 
 	connectedCallback () {
 		super.connectedCallback()
@@ -255,7 +258,7 @@ export class TestPayoutPage extends OpenElement {
 		try {
 			const { clients } = await api.clients()
 			this.clients = clients
-			if (!this.selectedClientId && clients.length > 0) {
+			if (!IS_PROD && !this.selectedClientId && clients.length > 0) {
 				this.selectedClientId = clients[0].id
 			}
 		} catch {
@@ -267,7 +270,7 @@ export class TestPayoutPage extends OpenElement {
 		const next = (event.currentTarget as HTMLSelectElement).value
 		this.currency = next
 		const preset = PRESETS[next]
-		if (preset) {
+		if (preset && !IS_PROD) {
 			this.amount = preset.amount
 			this.senderJson = JSON.stringify(preset.sender, null, 2)
 			this.beneficiaryJson = JSON.stringify(preset.beneficiary, null, 2)
@@ -276,13 +279,22 @@ export class TestPayoutPage extends OpenElement {
 
 	private async create (event : SubmitEvent) {
 		event.preventDefault()
+		if (IS_PROD) {
+			const data = new FormData(event.currentTarget as HTMLFormElement)
+			const client = this.clients.find(item => item.id === String(data.get('client_id') || ''))
+			if (!client) {
+				this.error = 'Select a client.'
+				return
+			}
+			if (!confirm(`Create a REAL payout of ${data.get('payout_amount')} ${data.get('payout_currency')} for ${client.name}? It will be reserved from the client's balance and sent to PEXX.`)) return
+		}
 		this.error = ''
 		this.result = null
 		this.submitting = true
 		const form = new FormData(event.currentTarget as HTMLFormElement)
 
 		try {
-			this.result = await api.testPayout({
+			this.result = await (IS_PROD ? api.createPayout : api.testPayout).call(api, {
 				client_id: String(form.get('client_id') || this.selectedClientId || ''),
 				reference_id: String(form.get('merchant_reference_id')),
 				merchantReferenceId: String(form.get('merchant_reference_id')),
@@ -303,7 +315,7 @@ export class TestPayoutPage extends OpenElement {
 				isRecipientSelf: form.get('is_recipient_self') === 'on',
 				message: String(form.get('message')) || null
 			})
-			this.reference = `test-${crypto.randomUUID()}`
+			this.reference = `${IS_PROD ? 'admin' : 'test'}-${crypto.randomUUID()}`
 			await this.loadClients()
 		} catch (error) {
 			this.error = error instanceof SyntaxError ? 'Sender and beneficiary must be valid JSON.' : (error as Error).message
@@ -315,7 +327,7 @@ export class TestPayoutPage extends OpenElement {
 	protected render () {
 		return html`
 			<div class=heading>
-				<div><p class=eyebrow>PEXX sandbox</p><h1>Test payout</h1></div>
+				<div><p class=eyebrow>${IS_PROD ? 'Production' : 'PEXX sandbox'}</p><h1>${IS_PROD ? 'Create payout' : 'Test payout'}</h1></div>
 			</div>
 			${this.error ? html`<section class=notice role=alert>${this.error}</section>` : null}
 			${this.result ? html`
@@ -330,8 +342,9 @@ export class TestPayoutPage extends OpenElement {
 			` : null}
 			<form class='panel payout-form' @submit=${this.create}>
 				<label>Client
-					<select name=client_id .value=${this.selectedClientId} @change=${(e : Event) => { this.selectedClientId = (e.currentTarget as HTMLSelectElement).value }}>
-						${this.clients.map(client => html`<option value=${client.id} ?selected=${client.id === this.selectedClientId}>${client.name} (Available: ${money(client.available_balance)}, Commission: ${client.commission_percent}%)</option>`)}
+					<select name=client_id required .value=${this.selectedClientId} @change=${(e : Event) => { this.selectedClientId = (e.currentTarget as HTMLSelectElement).value }}>
+						${IS_PROD ? html`<option value='' ?selected=${!this.selectedClientId}>Select client…</option>` : null}
+							${this.clients.map(client => html`<option value=${client.id} ?selected=${client.id === this.selectedClientId}>${client.name} (Available: ${money(client.available_balance)}, Commission: ${client.commission_percent}%)</option>`)}
 					</select>
 				</label>
 				<div class=split>
@@ -346,9 +359,9 @@ export class TestPayoutPage extends OpenElement {
 					<label>Sender JSON<textarea name=sender required .value=${this.senderJson} @input=${(e : Event) => { this.senderJson = (e.currentTarget as HTMLTextAreaElement).value }}></textarea></label>
 					<label>Beneficiary JSON<textarea name=beneficiary required .value=${this.beneficiaryJson} @input=${(e : Event) => { this.beneficiaryJson = (e.currentTarget as HTMLTextAreaElement).value }}></textarea></label>
 				</div>
-				<label>Message<input name=message autocomplete=off value='Sandbox test payout'></label>
+				<label>Message<input name=message autocomplete=off value=${IS_PROD ? '' : 'Sandbox test payout'}></label>
 				<label><span><input name=is_recipient_self type=checkbox> Sender and recipient are the same person</span></label>
-				<button class='button solid' type=submit ?disabled=${this.submitting}>${this.submitting ? 'Submitting…' : 'Create test payout'}</button>
+				<button class='button solid' type=submit ?disabled=${this.submitting}>${this.submitting ? 'Submitting…' : IS_PROD ? 'Create payout' : 'Create test payout'}</button>
 			</form>
 		`
 	}

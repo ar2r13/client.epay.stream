@@ -58,7 +58,7 @@ export class App extends OpenElement {
 				<nav aria-label=Primary>
 					<a href=/>Liquidity</a>
 					<a href=/clients>Clients</a>
-					${environment.id === 'prod' ? null : html`<a href=/test-payout>Test payout</a>`}
+					<a href=/test-payout>${environment.id === 'prod' ? 'Create payout' : 'Test payout'}</a>
 					<select class=env-switch aria-label=Environment @change=${(event : Event) => setEnvironment((event.target as HTMLSelectElement).value as EnvironmentId)}>
 						${environments.map(item => html`<option value=${item.id} .selected=${item.id === environment.id}>${item.label}</option>`)}
 					</select>
