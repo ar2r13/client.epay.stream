@@ -3,24 +3,50 @@ import { customElement, state } from 'lit/decorators.js'
 import { api, type Liquidity } from '../../controllers/api.ts'
 import { money, short, date } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
+import { getEnvironment } from '../../controllers/environment.ts'
+import { copyButton } from '../../lib/copy.ts'
+
+const CACHE_KEY = 'epay:liquidity:' + getEnvironment().id
+
+function readCache () : Liquidity | null {
+	try {
+		return JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? 'null') as Liquidity | null
+	} catch {
+		return null
+	}
+}
+
+function writeCache (data : Liquidity) {
+	try {
+		sessionStorage.setItem(CACHE_KEY, JSON.stringify(data))
+	} catch {
+		// storage unavailable, cache is optional
+	}
+}
 
 @customElement('dashboard-page')
 export class DashboardPage extends OpenElement {
-	@state() private data : Liquidity | null = null
+	@state() private data : Liquidity | null = readCache()
 	@state() private error = ''
+	@state() private refreshing = false
 
 	connectedCallback () {
 		super.connectedCallback()
 		this.load()
 	}
 
-	private async load () {
+	// Shows the last known data immediately and revalidates in the background.
+	private async load (refresh = false) {
 		this.error = ''
+		this.refreshing = true
 
 		try {
-			this.data = await api.liquidity()
+			this.data = await api.liquidity(refresh)
+			writeCache(this.data)
 		} catch (error) {
-			this.error = (error as Error).message
+			if (!this.data) this.error = (error as Error).message
+		} finally {
+			this.refreshing = false
 		}
 	}
 
@@ -36,7 +62,7 @@ export class DashboardPage extends OpenElement {
 					<p class=eyebrow>Operations</p>
 					<h1>Liquidity</h1>
 				</div>
-				<button class='button outlined' @click=${this.load}>Refresh</button>
+				<button class='button outlined' ?disabled=${this.refreshing} @click=${() => this.load(true)}>${this.refreshing ? 'Refreshing…' : 'Refresh'}</button>
 			</div>
 			${data.top_up_required ? html`<section class='notice warning' role=status>Provider liquidity requires a manual top-up.</section>` : null}
 			<section class=metrics aria-label='Liquidity balances'>
@@ -59,7 +85,7 @@ export class DashboardPage extends OpenElement {
 			<div class=wallet>
 				<span>${label}</span>
 				<code title=${address}>${short(address)}</code>
-				<button class='button text' @click=${() => navigator.clipboard.writeText(address)}>Copy</button>
+				${copyButton(address)}
 			</div>
 		`
 	}

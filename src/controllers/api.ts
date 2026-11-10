@@ -99,7 +99,7 @@ class Api {
 		return response.json() as Promise<T>
 	}
 
-	liquidity () {
+	liquidity (refresh = false) {
 		return this.request<{
 			provider_balance : string
 			provider_reserved : string
@@ -110,7 +110,7 @@ class Api {
 			gas_balance_bnb : string
 			top_up_required : boolean
 			updated_at : string
-		}>('/liquidity').then(data => ({
+		}>(refresh ? '/liquidity?refresh=1' : '/liquidity').then(data => ({
 			...data,
 			settlement_address: data.settlement_address ?? '',
 			fee_address: data.fee_address ?? '',

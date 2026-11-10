@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { api, type ClientDetail } from '../../controllers/api.ts'
 import { money, date, short } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
+import { copyButton, copyable } from '../../lib/copy.ts'
 
 @customElement('client-page')
 export class ClientPage extends OpenElement {
@@ -72,7 +73,7 @@ export class ClientPage extends OpenElement {
 				<section class='notice success' role=status>
 					<strong>New API key.</strong> Copy it now; it will not be shown again.
 					<code>${this.key}</code>
-					<button class='button outlined' @click=${() => navigator.clipboard.writeText(this.key)}>Copy key</button>
+					${copyButton(this.key, 'Copy key', 'button outlined')}
 				</section>
 			` : null}
 			<section class=metrics>
@@ -87,7 +88,7 @@ export class ClientPage extends OpenElement {
 						<label>Commission, %<input name=commission_percent required inputmode=decimal .value=${client.commission_percent}></label>
 						<button class='button solid' type=submit>Update commission</button>
 					</form>
-					<div class=datum><span>Deposit address</span><code title=${client.deposit_address}>${short(client.deposit_address)}</code></div>
+					<div class=datum><span>Deposit address</span><code title=${client.deposit_address}>${short(client.deposit_address)}</code>${copyButton(client.deposit_address)}</div>
 					<div class=datum><span>Webhook</span><strong>${client.webhook_url ?? 'Not configured'}</strong></div>
 					<div class=datum><span>Webhook status</span><strong>${client.webhook_status ?? '—'}</strong></div>
 				</article>
@@ -112,7 +113,7 @@ export class ClientPage extends OpenElement {
 				<div class=section-title><h2>Orders</h2><span class=muted>${client.orders.length} total</span></div>
 				<table><thead><tr><th>ID</th><th>Reference</th><th>Payout</th><th>Debit</th><th>Status</th><th>Created</th></tr></thead>
 				<tbody>${client.orders.map(order => html`<tr>
-					<td><code title=${order.id}>${short(order.id)}</code></td><td>${order.reference_id}</td>
+					<td>${copyable(order.id, short(order.id))}</td><td>${order.reference_id}</td>
 					<td>${money(order.payout_amount, order.payout_currency)}</td><td>${money(order.total_debit)}</td>
 					<td><span class=status>${order.status}</span></td><td>${date(order.created_at)}</td>
 				</tr>`)}</tbody></table>
@@ -127,7 +128,7 @@ export class ClientPage extends OpenElement {
 				<div class=section-title><h2>Deposits</h2><span class=muted>${client.deposits.length} total</span></div>
 				<table><thead><tr><th>Transaction</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
 				<tbody>${client.deposits.map(deposit => html`<tr>
-					<td><code title=${deposit.tx_hash}>${short(deposit.tx_hash)}</code></td><td>${money(deposit.amount)}</td>
+					<td>${copyable(deposit.tx_hash, short(deposit.tx_hash))}</td><td>${money(deposit.amount)}</td>
 					<td><span class=status>${deposit.status}</span></td><td>${date(deposit.created_at)}</td>
 				</tr>`)}</tbody></table>
 				${client.deposits.length === 0 ? html`<p class=empty>No deposits yet.</p>` : null}

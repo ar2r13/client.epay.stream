@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js'
 import { api, type ClientSummary, type TestPayout } from '../../controllers/api.ts'
 import { money, short } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
+import { copyButton } from '../../lib/copy.ts'
 import { getEnvironment } from '../../controllers/environment.ts'
 
 const IS_PROD = getEnvironment().id === 'prod'
@@ -334,8 +335,8 @@ export class TestPayoutPage extends OpenElement {
 				<section class='notice success' role=status>
 					<strong>Payout order created.</strong>
 					${this.result.client_id ? html`<div>Client <a href=${`/clients/${this.result.client_id}`}>${this.result.client_name ?? this.result.client_id}</a></div>` : null}
-					${this.result.order_id ? html`<div>Order ID <code>${this.result.order_id}</code> · Reference <code>${this.result.reference_id ?? this.result.merchant_reference_id}</code></div>` : html`<div>Reference <code>${this.result.merchant_reference_id}</code></div>`}
-					<div>Provider ID <code title=${this.result.provider_id}>${short(this.result.provider_id || '—')}</code></div>
+					${this.result.order_id ? html`<div>Order ID <code>${this.result.order_id}</code> ${copyButton(this.result.order_id)} · Reference <code>${this.result.reference_id ?? this.result.merchant_reference_id}</code></div>` : html`<div>Reference <code>${this.result.merchant_reference_id}</code></div>`}
+					<div>Provider ID <code title=${this.result.provider_id}>${short(this.result.provider_id || '—')}</code> ${copyButton(this.result.provider_id)}</div>
 					<div>Status <span class=status>${this.result.status}</span></div>
 					<div>Provider debit ${money(this.result.provider_debit)} · Fee ${money(this.result.provider_fee)} · Commission ${money(this.result.commission_amount ?? '0')} · Total debit ${money(this.result.total_debit ?? this.result.provider_debit)} · Rate ${this.result.rate}</div>
 				</section>

@@ -85,6 +85,8 @@
 	.wallet, .datum, .key-row { display: flex; align-items: center; gap: var(--gap); padding-block: .8rem; border-block-start: 1px solid var(--line) }
 	.wallet > span, .datum > span { min-inline-size: 7rem; color: var(--muted) }
 	.wallet code, .datum strong, .datum code { flex: 1 }
+	.copyable { display: inline-flex; align-items: center; gap: .25rem }
+	.button.copy { min-block-size: 1.75rem; font-size: .8rem }
 	.key-row { justify-content: space-between }
 	.key-row small { display: block; margin-block-start: .2rem; color: var(--muted) }
 }

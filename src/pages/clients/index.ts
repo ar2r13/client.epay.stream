@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js'
 import { api, type ClientSummary } from '../../controllers/api.ts'
 import { money, date } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
+import { copyButton } from '../../lib/copy.ts'
 
 @customElement('clients-page')
 export class ClientsPage extends OpenElement {
@@ -47,7 +48,7 @@ export class ClientsPage extends OpenElement {
 				<section class='notice success' role=status>
 					<strong>API key created.</strong> Copy it now; it will not be shown again.
 					<code>${this.key}</code>
-					<button class='button outlined' @click=${() => navigator.clipboard.writeText(this.key)}>Copy key</button>
+					${copyButton(this.key, 'Copy key', 'button outlined')}
 				</section>
 			` : null}
 			<section class=panel>
