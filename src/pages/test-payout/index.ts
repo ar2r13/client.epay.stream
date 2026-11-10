@@ -53,6 +53,15 @@ const label = (field : string) => field
 
 const isDate = (field : string) => field === 'dateOfBirth' || field.endsWith('Date')
 
+// Fixed value lists from the PEXX fiat-payout/create docs, per currency.
+const ID_SUB_TYPES : Record<string, string[]> = {
+	IDR: ['PASSPORT', 'ID_CARD'],
+	INR: ['PASSPORT', 'ID_CARD', 'DRIVER_LICENSE', 'LOCAL_ID', 'EMIRATES_ID']
+}
+const ID_SUB_TYPE_LABELS : Record<string, string> = {
+	PASSPORT: 'Passport', ID_CARD: 'ID card', DRIVER_LICENSE: 'Driver licence', LOCAL_ID: 'Local ID', EMIRATES_ID: 'Emirates ID'
+}
+
 const toValues = (value : Record<string, unknown>) : Values =>
 	Object.fromEntries(Object.entries(value).map(([key, item]) => [key, String(item)]))
 
@@ -537,19 +546,37 @@ export class TestPayoutPage extends OpenElement {
 		return result
 	}
 
+	private options (party : Party, field : string) : [string, string][] | null {
+		if (party === 'sender' && field === 'idSubType') {
+			const values = ID_SUB_TYPES[this.currency] ?? Object.keys(ID_SUB_TYPE_LABELS)
+			return values.map(value => [value, ID_SUB_TYPE_LABELS[value] ?? value])
+		}
+		return null
+	}
+
 	private renderInput (party : Party, field : string, required : boolean) {
 		const value = this[party][field] ?? ''
 		const hint = FIELD_HINTS[field] ?? ''
+		const options = this.options(party, field)
+		const update = (e : Event) => this.setValue(party, field, (e.currentTarget as HTMLInputElement | HTMLSelectElement).value)
 		return html`
 			<label class=${required && !filled(value.trim()) ? 'field missing' : 'field'} title=${hint}>
 				<span>${label(field)}${required ? html` <b class=required-mark>*</b>` : null}</span>
-				<input
-					type=${isDate(field) ? 'date' : field === 'email' ? 'email' : 'text'}
-					autocomplete=off
-					?required=${required}
-					placeholder=${hint}
-					.value=${value}
-					@input=${(e : Event) => this.setValue(party, field, (e.currentTarget as HTMLInputElement).value)}>
+				${options ? html`
+					<select ?required=${required} @change=${update}>
+						<option value='' ?selected=${!value}>Select…</option>
+						${options.map(([option, text]) => html`<option value=${option} ?selected=${option === value}>${text}</option>`)}
+						${value && !options.some(([option]) => option === value) ? html`<option value=${value} selected>${value} (not allowed)</option>` : null}
+					</select>
+				` : html`
+					<input
+						type=${isDate(field) ? 'date' : field === 'email' ? 'email' : 'text'}
+						autocomplete=off
+						?required=${required}
+						placeholder=${hint}
+						.value=${value}
+						@input=${update}>
+				`}
 			</label>
 		`
 	}

@@ -87,7 +87,7 @@
 	.party > .status { justify-self: start }
 	.party .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: .75rem }
 	.party .field { display: grid; gap: .3rem; font-size: .85rem }
-	.party .field.missing input { border-color: var(--danger) }
+	.party .field.missing :is(input, select) { border-color: var(--danger) }
 	.party .required-mark { color: var(--danger) }
 	.party .optional { margin: .25rem 0 0 }
 	.payout-form .rules { margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: .85rem }
