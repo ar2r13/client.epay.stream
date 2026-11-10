@@ -138,6 +138,37 @@ class Api {
 		return this.request<{ currencies : PayoutRequirement[] }>('/payout-requirements').then(data => data.currencies)
 	}
 
+	liquiditySummary () {
+		return this.request<{
+			provider_reserved : string
+			settlement_address : string | null
+			fee_address : string | null
+			gas_wallet_address : string | null
+			updated_at : string
+		}>('/liquidity/summary').then(data => ({
+			provider_reserved: data.provider_reserved,
+			settlement_address: data.settlement_address ?? '',
+			fee_address: data.fee_address ?? '',
+			gas_address: data.gas_wallet_address ?? '',
+			updated_at: data.updated_at
+		}))
+	}
+
+	providerLiquidity (refresh = false) {
+		return this.request<{
+			provider_balance : string
+			provider_reserved : string
+			provider_available : string
+			top_up_required : boolean
+			updated_at : string
+		}>(refresh ? '/liquidity/provider?refresh=1' : '/liquidity/provider')
+	}
+
+	gasLiquidity (refresh = false) {
+		return this.request<{ gas_balance_bnb : string, updated_at : string }>(refresh ? '/liquidity/gas?refresh=1' : '/liquidity/gas')
+			.then(data => ({ gas_balance: data.gas_balance_bnb, updated_at: data.updated_at }))
+	}
+
 	testPayout (body : Record<string, unknown>) {
 		return this.request<TestPayout>('/test-payouts', {
 			method: 'POST',
