@@ -234,6 +234,203 @@ const PRESETS : Record<string, Preset> = {
 			bankCode: 'SCBL',
 			name: 'Ali Khan'
 		}
+	},
+	AED: {
+		amount: '100',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			idIssueDate: '2020-01-01',
+			idExpireDate: '2030-01-01',
+			zipCode: '00000'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	AUD: {
+		amount: '50',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			city: 'Sydney',
+			country: 'AUS',
+			remark: 'Test payout'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	THB: {
+		amount: '1000',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			address: '1 Main St'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	JPY: {
+		amount: '5000',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			address: '1 Main St',
+			city: 'Tokyo',
+			country: 'JPN'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	MYR: {
+		amount: '100',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			address: '1 Main St',
+			country: 'MYS'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	CAD: {
+		amount: '50',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			city: 'Toronto',
+			address: '1 Main St',
+			postalCode: 'M5V2T6',
+			country: 'CAN'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	KRW: {
+		amount: '50000',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			country: 'KOR'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
+	},
+	HKD: {
+		amount: '300',
+		sender: {
+			accountType: 'PERSONAL',
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			email: 'jane@example.com',
+			phone: '+6581234567',
+			phoneCountryCode: '+65',
+			dateOfBirth: '1990-01-01',
+			idType: '1',
+			idValue: 'A12345678',
+			nationality: 'SGP',
+			country: 'HKG',
+			city: 'Hong Kong',
+			address: '1 Main St',
+			zipCode: '000000'
+		},
+		beneficiary: {
+			accountType: 'PERSONAL',
+			firstName: 'John',
+			lastName: 'Smith',
+			bankAccountNumber: '1234567890'
+		}
 	}
 }
 
@@ -353,7 +550,7 @@ export class TestPayoutPage extends OpenElement {
 					<label>Amount<input name=payout_amount required inputmode=decimal .value=${this.amount} @input=${(e : Event) => { this.amount = (e.currentTarget as HTMLInputElement).value }}></label>
 				</div>
 				<div class=split>
-					<label>Currency<select name=payout_currency .value=${this.currency} @change=${this.onCurrencyChange}><option>IDR</option><option>PHP</option><option>INR</option><option>VND</option><option>CNY</option><option>GBP</option><option>EUR</option><option>USD</option><option>PKR</option></select></label>
+					<label>Currency<select name=payout_currency .value=${this.currency} @change=${this.onCurrencyChange}><option>IDR</option><option>PHP</option><option>INR</option><option>VND</option><option>CNY</option><option>GBP</option><option>EUR</option><option>USD</option><option>PKR</option><option>AED</option><option>AUD</option><option>THB</option><option>JPY</option><option>MYR</option><option>CAD</option><option>KRW</option><option>HKD</option></select></label>
 					<label>Transaction type<select name=transaction_type><option>C2C</option><option>C2B</option><option>B2C</option><option>B2B</option></select></label>
 				</div>
 				<div class=split>
