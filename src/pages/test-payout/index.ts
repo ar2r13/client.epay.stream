@@ -606,8 +606,9 @@ export class TestPayoutPage extends OpenElement {
 			</div>
 			${this.error ? html`<section class=notice role=alert>${this.error}</section>` : null}
 			${this.result ? html`
-				<section class='notice success' role=status>
-					<strong>Payout order created.</strong>
+				<section class=${['CANCELLED', 'SUBMISSION_UNKNOWN'].includes(this.result.status) ? 'notice warning' : 'notice success'} role=status>
+					<strong>${this.result.status === 'CANCELLED' ? 'Payout was rejected.' : this.result.status === 'SUBMISSION_UNKNOWN' ? 'Payout outcome is unknown, reconciling.' : 'Payout order created.'}</strong>
+					${this.result.error_message ? html`<div>Reason <code>${this.result.error_code ? `${this.result.error_code} · ` : ''}${this.result.error_message}</code></div>` : null}
 					${this.result.client_id ? html`<div>Client <a href=${`/clients/${this.result.client_id}`}>${this.result.client_name ?? this.result.client_id}</a></div>` : null}
 					${this.result.order_id ? html`<div>Order ID <code>${this.result.order_id}</code> ${copyButton(this.result.order_id)} · Reference <code>${this.result.reference_id ?? this.result.merchant_reference_id}</code></div>` : html`<div>Reference <code>${this.result.merchant_reference_id}</code></div>`}
 					<div>Provider ID <code title=${this.result.provider_id}>${short(this.result.provider_id || '—')}</code> ${copyButton(this.result.provider_id)}</div>

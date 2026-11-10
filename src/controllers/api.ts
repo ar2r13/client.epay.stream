@@ -84,6 +84,8 @@ export interface TestPayout {
 	provider_fee : string
 	commission_amount? : string
 	total_debit? : string
+	error_code? : string | null
+	error_message? : string | null
 }
 
 const API_ORIGIN = getEnvironment().apiOrigin
