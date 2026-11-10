@@ -111,11 +111,11 @@ export class ClientPage extends OpenElement {
 		return html`
 			<section class='panel table-wrap'>
 				<div class=section-title><h2>Orders</h2><span class=muted>${client.orders.length} total</span></div>
-				<table><thead><tr><th>ID</th><th>Reference</th><th>Payout</th><th>Debit</th><th>Status</th><th>Created</th></tr></thead>
+				<table><thead><tr><th>ID</th><th>Reference</th><th>Payout</th><th>Debit</th><th>Status</th><th>PEXX status</th><th>Created</th></tr></thead>
 				<tbody>${client.orders.map(order => html`<tr>
 					<td>${copyable(order.id, short(order.id))}</td><td>${order.reference_id}</td>
 					<td>${money(order.payout_amount, order.payout_currency)}</td><td>${money(order.total_debit)}</td>
-					<td><span class=status>${order.status}</span></td><td>${date(order.created_at)}</td>
+					<td><span class=status>${order.status}</span></td><td>${order.provider_status ? html`<span class=status>${order.provider_status}</span>` : html`<span class=muted>—</span>`}</td><td>${date(order.created_at)}</td>
 				</tr>`)}</tbody></table>
 				${client.orders.length === 0 ? html`<p class=empty>No orders yet.</p>` : null}
 			</section>
