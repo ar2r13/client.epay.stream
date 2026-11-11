@@ -22,6 +22,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Balance'
+  /rates:
+    get:
+      operationId: getRates
+      description: >-
+        Indicative USDT to fiat rates: 1 USDT pays out `rate` units of `currency`. The rate is not reduced by your
+        commission. Commission (`commission_rate`, percent) is charged on top of the USDT amount needed for the payout,
+        so the estimated debit is `payout_amount / rate * (1 + commission_rate / 100)`. Rates are not locked; the
+        actual debit is fixed when the order is created. Cached for up to 30 seconds.
+      parameters:
+        - in: query
+          name: currency
+          description: Comma-separated payout currencies. All supported currencies when omitted.
+          schema: { type: string, example: 'IDR,INR' }
+        - in: query
+          name: transaction_type
+          schema: { type: string, enum: [C2C, C2B, B2C, B2B], default: C2C }
+      responses:
+        '200':
+          description: Current indicative rates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rates'
+        '400':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
   /order:
     post:
       operationId: createOrder
@@ -160,6 +187,27 @@ components:
         deposit_address: { type: string }
         updated_at: { type: string, format: date-time }
         syncing: { type: boolean }
+    Rates:
+      type: object
+      required: [source_currency, transaction_type, indicative, commission_rate, rates, updated_at]
+      properties:
+        source_currency: { const: USDT }
+        transaction_type: { type: string, enum: [C2C, C2B, B2C, B2B] }
+        indicative: { const: true }
+        commission_rate:
+          type: string
+          description: Your commission in percent, charged on top of the USDT debit (not included in `rate`).
+        rates:
+          type: array
+          description: Currencies the provider did not quote right now are left out.
+          items:
+            type: object
+            required: [currency, rate, rate_time]
+            properties:
+              currency: { type: string }
+              rate: { $ref: '#/components/schemas/Decimal' }
+              rate_time: { type: [string, 'null'] }
+        updated_at: { type: string, format: date-time }
     CreateOrder:
       type: object
       additionalProperties: false
