@@ -172,6 +172,17 @@ class Api {
 			.then(data => ({ gas_balance: data.gas_balance_bnb, updated_at: data.updated_at }))
 	}
 
+	rates (refresh = false) {
+		return this.request<{
+			source_currency : string
+			transaction_type : string
+			scene : string
+			rates : Array<{ currency : string, rate : string, rate_id : string | null, rate_time : string | null }>
+			missing : string[]
+			updated_at : string
+		}>(refresh ? '/rates?refresh=1' : '/rates')
+	}
+
 	testPayout (body : Record<string, unknown>) {
 		return this.request<TestPayout>('/test-payouts', {
 			method: 'POST',

@@ -9,6 +9,7 @@ import { copyButton } from '../../lib/copy.ts'
 type Summary = Awaited<ReturnType<typeof api.liquiditySummary>>
 type Provider = Awaited<ReturnType<typeof api.providerLiquidity>>
 type Gas = Awaited<ReturnType<typeof api.gasLiquidity>>
+type Rates = Awaited<ReturnType<typeof api.rates>>
 
 // Each part has its own last known value, loading flag and error,
 // so the slow PEXX and BSC calls never hold back the rest of the page.
@@ -45,6 +46,7 @@ export class DashboardPage extends OpenElement {
 	@state() private summary = part<Summary>('summary')
 	@state() private provider = part<Provider>('provider')
 	@state() private gas = part<Gas>('gas')
+	@state() private rates = part<Rates>('rates')
 
 	connectedCallback () {
 		super.connectedCallback()
@@ -55,10 +57,11 @@ export class DashboardPage extends OpenElement {
 		this.loadPart('summary', () => api.liquiditySummary())
 		this.loadPart('provider', () => api.providerLiquidity(refresh))
 		this.loadPart('gas', () => api.gasLiquidity(refresh))
+		this.loadPart('rates', () => api.rates(refresh))
 	}
 
 	// Shows the last known value immediately and revalidates in the background.
-	private async loadPart<T> (key : 'summary' | 'provider' | 'gas', fetch : () => Promise<T>) {
+	private async loadPart<T> (key : 'summary' | 'provider' | 'gas' | 'rates', fetch : () => Promise<T>) {
 		const set = (value : Part<T>) => { (this as unknown as Record<string, Part<T>>)[key] = value }
 		const current = this[key] as Part<T>
 
@@ -75,7 +78,7 @@ export class DashboardPage extends OpenElement {
 	}
 
 	private get refreshing () {
-		return this.summary.loading || this.provider.loading || this.gas.loading
+		return this.summary.loading || this.provider.loading || this.gas.loading || this.rates.loading
 	}
 
 	protected render () {
@@ -85,7 +88,8 @@ export class DashboardPage extends OpenElement {
 		const errors = [
 			this.summary.error && `Wallets: ${this.summary.error}`,
 			this.provider.error && `PEXX balance: ${this.provider.error}`,
-			this.gas.error && `Gas pool: ${this.gas.error}`
+			this.gas.error && `Gas pool: ${this.gas.error}`,
+			this.rates.error && `PEXX rates: ${this.rates.error}`
 		].filter(Boolean)
 
 		return html`
@@ -109,6 +113,27 @@ export class DashboardPage extends OpenElement {
 				${this.wallet('Settlement', summary?.settlement_address)}
 				${this.wallet('Fee', summary?.fee_address)}
 				${this.wallet('Gas pool', summary?.gas_address)}
+			</section>
+			${this.ratesPanel()}
+		`
+	}
+
+	// Raw PEXX rates (1 USDT = rate units of currency), before client commission.
+	private ratesPanel () {
+		const rates = this.rates.data
+		const status = rates ? `${rates.transaction_type} · updated ${date(rates.updated_at)}` : (this.rates.loading ? 'Loading…' : '—')
+
+		return html`
+			<section class=panel>
+				<div class=section-title><h2>PEXX rates</h2><span class=muted>${status}</span></div>
+				${rates?.rates.length ? html`
+					<div class=table-wrap>
+						<table><thead><tr><th>Currency</th><th>1 USDT =</th><th>Rate time</th></tr></thead>
+							<tbody>${rates.rates.map(rate => html`<tr><td>${rate.currency}</td><td>${rate.rate}</td><td>${date(rate.rate_time)}</td></tr>`)}</tbody>
+						</table>
+					</div>
+				` : html`<p class=muted>${this.rates.loading ? 'Loading…' : 'No rates'}</p>`}
+				${rates?.missing.length ? html`<p class=muted>Not quoted: ${rates.missing.join(', ')}</p>` : null}
 			</section>
 		`
 	}
