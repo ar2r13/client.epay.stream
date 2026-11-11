@@ -1,5 +1,6 @@
-const cacheName = 'epay-admin-v3'
-const shell = ['/', '/style.css', '/index.js', '/manifest.json']
+// Script and stylesheet names are content-hashed, so only the fixed-name files are precached.
+const cacheName = 'epay-admin-v4'
+const shell = ['/', '/manifest.json']
 
 self.addEventListener('install', event => {
 	;(event as ExtendableEvent).waitUntil(caches.open(cacheName).then(cache => cache.addAll(shell)))
