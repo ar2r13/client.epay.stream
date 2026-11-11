@@ -1,0 +1,18 @@
+# Entry files keep fixed names, so the browser must revalidate them on every load,
+# otherwise a deploy reaches the admin only after the default 4 h browser cache expires.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/index.js
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/style.css
+  Cache-Control: no-cache
+/manifest.json
+  Cache-Control: no-cache
+
+# Chunks carry a content hash in the name and never change.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
