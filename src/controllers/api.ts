@@ -46,6 +46,8 @@ export interface Order {
 	reference_id : string
 	status : string
 	provider_status : string | null
+	error_code : string | null
+	error_message : string | null
 	payout_amount : string
 	payout_currency : string
 	total_debit : string | null

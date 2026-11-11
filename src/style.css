@@ -78,6 +78,7 @@
 	.notice { display: grid; gap: var(--gap-xs); padding: var(--gap); border: 1px solid #f0c36d; border-radius: .45rem; color: #6b4200; background: #fff8e8 }
 	.notice code { display: block; padding: .65rem; color: var(--ink); background: #fff }
 	.status { display: inline-flex; align-items: center; gap: .4rem; color: var(--ink); font-size: .8rem; font-weight: 700 }
+	.reason { display: block; max-inline-size: 28rem; margin-block-start: .25rem; color: var(--muted); font-size: .8rem; white-space: normal; overflow-wrap: anywhere }
 	.status::before { content: ''; inline-size: .45rem; block-size: .45rem; border-radius: 50%; background: #64748b }
 	.form { display: flex; align-items: end; gap: var(--gap) }
 	.form label { flex: 1 }

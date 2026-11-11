@@ -115,7 +115,7 @@ export class ClientPage extends OpenElement {
 				<tbody>${client.orders.map(order => html`<tr>
 					<td>${copyable(order.id, short(order.id))}</td><td>${order.reference_id}</td>
 					<td>${money(order.payout_amount, order.payout_currency)}</td><td>${money(order.total_debit)}</td>
-					<td><span class=status>${order.status}</span></td><td>${order.provider_status ? html`<span class=status>${order.provider_status}</span>` : html`<span class=muted>—</span>`}</td><td>${date(order.created_at)}</td>
+					<td><span class=status>${order.status}</span>${order.error_message ? html`<small class=reason title=${order.error_code ?? ''}>${order.error_message}</small>` : null}</td><td>${order.provider_status ? html`<span class=status>${order.provider_status}</span>` : html`<span class=muted>—</span>`}</td><td>${date(order.created_at)}</td>
 				</tr>`)}</tbody></table>
 				${client.orders.length === 0 ? html`<p class=empty>No orders yet.</p>` : null}
 			</section>
