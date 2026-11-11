@@ -14,7 +14,10 @@ class Router extends EventTarget {
 		navigation.addEventListener('navigate', event => {
 			const url = new URL(event.destination.url)
 
-			if (!event.canIntercept || url.origin !== location.origin) return
+			// A reload must stay a real page load: the environment switch relies on it to re-read
+			// the API origin, which modules capture once at startup.
+			if (!event.canIntercept || event.navigationType === 'reload' || event.hashChange || event.downloadRequest !== null) return
+			if (url.origin !== location.origin) return
 
 			event.intercept({ handler: () => this.render(url) })
 		})
