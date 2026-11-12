@@ -53,14 +53,14 @@ const FIELD_HINTS : Record<string, string> = {
 	bankCode: 'Recipient bank code', bankBranchCode: 'Bank branch code (sort code, BSB, …)', bankAccountType: 'Bank account type, e.g. CHECKING',
 	transactionType: 'Transfer rail, e.g. IMPS',
 	ifsc: 'IFSC code (with accountNumber)', vpa: 'UPI address (instead of accountNumber + IFSC)',
-	napasCode: 'NAPAS bank code (or bankCode)', swiftCode: 'SWIFT / BIC code'
+	napasCode: 'NAPAS bank code (or bankCode)', swiftCode: 'SWIFT / BIC code',
+	bankId: 'Recipient bank ID from the PEXX bank list', bankState: 'State of the recipient bank branch', bankCity: 'City of the recipient bank branch'
 }
 
 // Fields that are not on the required list but that a corridor rule needs (see /payout-requirements rules).
 const OPTIONAL_FIELDS : Record<string, { sender? : string[], beneficiary? : string[] }> = {
 	INR: { beneficiary: ['accountNumber', 'ifsc', 'vpa'] },
-	VND: { beneficiary: ['napasCode', 'bankCode'] },
-	EUR: { beneficiary: ['swiftCode'] }
+	VND: { beneficiary: ['napasCode', 'bankCode'] }
 }
 
 type Party = 'sender' | 'beneficiary'
@@ -246,10 +246,7 @@ const PRESETS : Record<string, Preset> = {
 			dateOfBirth: '1985-05-15',
 			bankAccountType: '5',
 			bankAccountNumber: 'DE89370400440532013000',
-			swiftCode: 'COBADEFFXXX',
-			address: 'Hauptstrasse 1 Berlin',
-			idType: '1',
-			idNumber: 'P1234567'
+			swiftCode: 'COBADEFFXXX'
 		}
 	},
 	USD: {
@@ -329,7 +326,12 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
-			bankAccountNumber: '1234567890'
+			phoneCountryCode: '+971',
+			mobileNumber: '501234567',
+			city: 'Dubai',
+			address: '1 Sheikh Zayed Road',
+			bankAccountNumber: 'AE070331234567890123456',
+			swiftCode: 'EBILAEADXXX'
 		}
 	},
 	AUD: {
@@ -354,7 +356,15 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
-			bankAccountNumber: '1234567890'
+			dateOfBirth: '1985-05-15',
+			idType: '1',
+			idNumber: 'P1234567',
+			address: '1 George St Sydney',
+			bankState: 'New South Wales',
+			bankCity: 'Sydney',
+			bankId: '1',
+			bankBranchCode: '062000',
+			bankAccountNumber: '12345678'
 		}
 	},
 	THB: {
@@ -377,6 +387,8 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
+			dateOfBirth: '1985-05-15',
+			bankId: '1',
 			bankAccountNumber: '1234567890'
 		}
 	},
@@ -402,7 +414,11 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
-			bankAccountNumber: '1234567890'
+			dateOfBirth: '1985-05-15',
+			address: '1 Chiyoda Tokyo',
+			bankBranchCode: '001',
+			bankId: '1',
+			bankAccountNumber: '1234567'
 		}
 	},
 	MYR: {
@@ -426,6 +442,7 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
+			bankId: '1',
 			bankAccountNumber: '1234567890'
 		}
 	},
@@ -452,7 +469,15 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
-			bankAccountNumber: '1234567890'
+			dateOfBirth: '1985-05-15',
+			phoneCountryCode: '+1',
+			mobileNumber: '4165550100',
+			address: '1 King St W',
+			city: 'Toronto',
+			zipCode: 'M5H1A1',
+			bankBranchCode: '00012',
+			bankId: '1',
+			bankAccountNumber: '1234567'
 		}
 	},
 	KRW: {
@@ -475,6 +500,13 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
+			dateOfBirth: '1985-05-15',
+			nationality: 'KOR',
+			idType: '1',
+			idNumber: 'M12345678',
+			phoneCountryCode: '+82',
+			mobileNumber: '1012345678',
+			bankId: '1',
 			bankAccountNumber: '1234567890'
 		}
 	},
@@ -501,7 +533,10 @@ const PRESETS : Record<string, Preset> = {
 			accountType: 'PERSONAL',
 			firstName: 'John',
 			lastName: 'Smith',
-			bankAccountNumber: '1234567890'
+			dateOfBirth: '1985-05-15',
+			address: '1 Queens Road Central',
+			bankId: '1',
+			bankAccountNumber: '123456789'
 		}
 	}
 }
