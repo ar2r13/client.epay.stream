@@ -1,33 +1,29 @@
 import { html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
-import { api, type ClientSummary, type PayoutRequirement, type TestPayout } from '../../controllers/api.ts'
-import { money, short } from '../../lib/format.ts'
+import { api, type BankDirectoryEntry, type ClientSummary, type PayoutRequirement, type TestPayout } from '../../controllers/api.ts'
+import { money, short, statusTone } from '../../lib/format.ts'
 import { OpenElement } from '../../lib/element.ts'
 import { copyButton } from '../../lib/copy.ts'
 import { getEnvironment } from '../../controllers/environment.ts'
+import {
+	cleanValues,
+	consumePayoutPrefill,
+	deleteBeneficiaryProfile,
+	deleteSenderProfile,
+	formatBeneficiaryLabel,
+	formatSenderLabel,
+	getSavedBeneficiaries,
+	getSavedSenders,
+	loadPayoutDraft,
+	saveBeneficiaryProfile,
+	savePayoutDraft,
+	saveSenderProfile,
+	type SavedBeneficiary,
+	type SavedSender,
+	type Values
+} from '../../lib/profiles.ts'
 
 const IS_PROD = getEnvironment().id === 'prod'
-
-// Sender details typed on this screen, kept in this browser only (one set per environment).
-const SENDER_KEY = `epay-test-payout-sender:${getEnvironment().id}`
-
-const loadSender = () : Values => {
-	try {
-		const parsed = JSON.parse(localStorage.getItem(SENDER_KEY) ?? 'null')
-		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
-	} catch {
-		return {}
-	}
-}
-
-const saveSender = (value : Values | null) => {
-	try {
-		if (value) localStorage.setItem(SENDER_KEY, JSON.stringify(value))
-		else localStorage.removeItem(SENDER_KEY)
-	} catch {
-		// Storage can be blocked; the form still works without it.
-	}
-}
 
 interface Preset {
 	amount : string
@@ -64,7 +60,6 @@ const OPTIONAL_FIELDS : Record<string, { sender? : string[], beneficiary? : stri
 }
 
 type Party = 'sender' | 'beneficiary'
-type Values = Record<string, string>
 
 const filled = (value : unknown) => value !== undefined && value !== null && value !== ''
 
@@ -86,7 +81,7 @@ const ID_SUB_TYPE_LABELS : Record<string, string> = {
 const toValues = (value : Record<string, unknown>) : Values =>
 	Object.fromEntries(Object.entries(value).map(([key, item]) => [key, String(item)]))
 
-const PRESETS : Record<string, Preset> = {
+export const PRESETS : Record<string, Preset> = {
 	IDR: {
 		amount: '50000',
 		sender: {
@@ -549,18 +544,114 @@ export class TestPayoutPage extends OpenElement {
 	@state() private transactionType = 'C2C'
 	@state() private requirements : PayoutRequirement[] = []
 	@state() private amount = IS_PROD ? '' : PRESETS.IDR.amount
-	@state() private sender : Values = { ...(IS_PROD ? {} : toValues(PRESETS.IDR.sender)), ...loadSender() }
-	@state() private senderSaved = Object.keys(loadSender()).length > 0
-	@state() private beneficiary : Values = IS_PROD ? {} : toValues(PRESETS.IDR.beneficiary)
+	@state() private sender : Values = {}
+	@state() private beneficiary : Values = {}
+	@state() private message = IS_PROD ? '' : 'Sandbox test payout'
+	@state() private isRecipientSelf = false
+	@state() private autoSaveOnSubmit = true
+
+	@state() private savedSenders : SavedSender[] = []
+	@state() private savedBeneficiaries : SavedBeneficiary[] = []
+	@state() private selectedSenderProfileId = ''
+	@state() private selectedBeneficiaryProfileId = ''
+	@state() private senderCustomLabel = ''
+	@state() private beneficiaryCustomLabel = ''
+	@state() private flashNote = ''
+
+	@state() private bankDirectories : Record<string, BankDirectoryEntry[]> = {}
+	@state() private rates : Record<string, string> = {}
+
 	@state() private error = ''
 	@state() private result : TestPayout | null = null
+	@state() private reconcilingResult = false
 	@state() private submitting = false
 	@state() private reference = `${IS_PROD ? 'admin' : 'test'}-${crypto.randomUUID()}`
 
 	connectedCallback () {
 		super.connectedCallback()
+		this.savedSenders = getSavedSenders()
+		this.savedBeneficiaries = getSavedBeneficiaries()
+		this.initFormState()
 		this.loadClients()
 		api.payoutRequirements().then(items => { this.requirements = items }).catch(() => {})
+		api.bankDirectories().then(dirs => { this.bankDirectories = dirs }).catch(() => {})
+		this.loadRates()
+	}
+
+	private initFormState () {
+		const params = new URLSearchParams(location.search)
+		const urlClient = params.get('client') || ''
+		const prefill = consumePayoutPrefill()
+		const draft = loadPayoutDraft()
+
+		if (prefill) {
+			if (prefill.clientId) this.selectedClientId = prefill.clientId
+			if (prefill.currency) this.currency = prefill.currency
+			if (prefill.transactionType) this.transactionType = prefill.transactionType
+			if (prefill.amount) this.amount = prefill.amount
+			if (prefill.sender) this.sender = cleanValues(prefill.sender)
+			if (prefill.beneficiary) this.beneficiary = cleanValues(prefill.beneficiary)
+			if (prefill.message !== undefined) this.message = prefill.message
+			if (prefill.isRecipientSelf !== undefined) this.isRecipientSelf = prefill.isRecipientSelf
+			this.persistDraft()
+			this.showFlash('Order details loaded into the form.')
+			return
+		}
+
+		if (urlClient) this.selectedClientId = urlClient
+		else if (draft.clientId) this.selectedClientId = draft.clientId
+
+		if (draft.currency) this.currency = draft.currency
+		if (draft.transactionType) this.transactionType = draft.transactionType
+		if (draft.amount !== undefined) this.amount = draft.amount
+		if (draft.message !== undefined) this.message = draft.message
+		if (draft.isRecipientSelf !== undefined) this.isRecipientSelf = draft.isRecipientSelf
+		if (draft.autoSaveOnSubmit !== undefined) this.autoSaveOnSubmit = draft.autoSaveOnSubmit
+
+		const preset = PRESETS[this.currency] ?? PRESETS.IDR
+		const defaultSender = IS_PROD ? {} : toValues(preset.sender)
+		const defaultBeneficiary = IS_PROD ? {} : toValues(preset.beneficiary)
+
+		this.sender = Object.keys(draft.sender ?? {}).length > 0
+			? draft.sender!
+			: (this.savedSenders[0]?.values ? { ...defaultSender, ...this.savedSenders[0].values } : defaultSender)
+
+		const matchingBeneficiary = this.savedBeneficiaries.find(item => item.currency === this.currency)
+		this.beneficiary = Object.keys(draft.beneficiary ?? {}).length > 0
+			? draft.beneficiary!
+			: (matchingBeneficiary ? { ...defaultBeneficiary, ...matchingBeneficiary.values } : defaultBeneficiary)
+	}
+
+	private persistDraft () {
+		savePayoutDraft({
+			clientId: this.selectedClientId,
+			currency: this.currency,
+			transactionType: this.transactionType,
+			amount: this.amount,
+			sender: this.sender,
+			beneficiary: this.beneficiary,
+			message: this.message,
+			isRecipientSelf: this.isRecipientSelf,
+			autoSaveOnSubmit: this.autoSaveOnSubmit
+		})
+	}
+
+	private showFlash (text : string) {
+		this.flashNote = text
+		setTimeout(() => {
+			if (this.flashNote === text) this.flashNote = ''
+		}, 3000)
+	}
+
+	private async loadRates () {
+		try {
+			const data = await api.rates(false, this.transactionType)
+			const map : Record<string, string> = {}
+			for (const item of data.rates) map[item.currency] = item.rate
+			this.rates = map
+		} catch {
+			// Indicative rates are optional
+		}
 	}
 
 	private get requirement () {
@@ -571,9 +662,12 @@ export class TestPayoutPage extends OpenElement {
 		return this.requirement?.transaction_types.find(item => item.transaction_type === this.transactionType)
 	}
 
-	private accountType (party : Party) {
+	private accountType (party : Party) : 'PERSONAL' | 'BUSINESS' {
 		const corridor = this.corridor
-		if (corridor) return party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type
+		if (corridor) {
+			const raw = party === 'sender' ? corridor.sender_account_type : corridor.beneficiary_account_type
+			return raw === 'BUSINESS' ? 'BUSINESS' : 'PERSONAL'
+		}
 		return (party === 'sender' ? this.transactionType[0] : this.transactionType[2]) === 'B' ? 'BUSINESS' : 'PERSONAL'
 	}
 
@@ -591,18 +685,7 @@ export class TestPayoutPage extends OpenElement {
 
 	private setValue (party : Party, field : string, value : string) {
 		this[party] = { ...this[party], [field]: value }
-		if (party === 'sender') {
-			const { accountType: _, ...sender } = this.sender
-			saveSender(sender)
-			this.senderSaved = true
-		}
-	}
-
-	private forgetSender () {
-		saveSender(null)
-		this.senderSaved = false
-		const preset = PRESETS[this.currency]
-		this.sender = preset && !IS_PROD ? toValues(preset.sender) : {}
+		this.persistDraft()
 	}
 
 	/** Only the fields shown for the current corridor, non-empty, plus accountType from the transaction type. */
@@ -615,6 +698,99 @@ export class TestPayoutPage extends OpenElement {
 		return result
 	}
 
+	private handleSaveSender () {
+		const payload = this.payload('sender')
+		const saved = saveSenderProfile(
+			this.accountType('sender'),
+			payload,
+			this.senderCustomLabel,
+			this.selectedSenderProfileId || undefined
+		)
+		if (saved) {
+			this.savedSenders = getSavedSenders()
+			this.selectedSenderProfileId = saved.id
+			this.senderCustomLabel = ''
+			this.showFlash(`Saved sender "${saved.label}" to localStorage`)
+		}
+	}
+
+	private handleSelectSender (id : string) {
+		this.selectedSenderProfileId = id
+		const found = this.savedSenders.find(item => item.id === id)
+		if (!found) return
+		this.sender = { ...this.sender, ...found.values }
+		this.persistDraft()
+		this.showFlash(`Loaded sender "${found.label}"`)
+	}
+
+	private handleDeleteSender (id : string) {
+		const found = this.savedSenders.find(item => item.id === id)
+		this.savedSenders = deleteSenderProfile(id)
+		if (this.selectedSenderProfileId === id) this.selectedSenderProfileId = ''
+		if (found) this.showFlash(`Deleted sender "${found.label}"`)
+	}
+
+	private handleSaveBeneficiary () {
+		const payload = this.payload('beneficiary')
+		const saved = saveBeneficiaryProfile(
+			this.currency,
+			this.accountType('beneficiary'),
+			payload,
+			this.beneficiaryCustomLabel,
+			this.selectedBeneficiaryProfileId || undefined
+		)
+		if (saved) {
+			this.savedBeneficiaries = getSavedBeneficiaries()
+			this.selectedBeneficiaryProfileId = saved.id
+			this.beneficiaryCustomLabel = ''
+			this.showFlash(`Saved recipient "${saved.label}" to localStorage`)
+		}
+	}
+
+	private handleSelectBeneficiary (id : string) {
+		this.selectedBeneficiaryProfileId = id
+		const found = this.savedBeneficiaries.find(item => item.id === id)
+		if (!found) return
+		if (found.currency && found.currency !== this.currency) {
+			this.currency = found.currency
+		}
+		// Match beneficiary accountType with transactionType if needed
+		const wantBusiness = found.accountType === 'BUSINESS'
+		const senderPrefix = this.transactionType.startsWith('B') ? 'B' : 'C'
+		const nextTxType = `${senderPrefix}2${wantBusiness ? 'B' : 'C'}`
+		const allowed = this.requirement?.transaction_types.map(t => t.transaction_type) ?? ['C2C', 'C2B', 'B2C', 'B2B']
+		if (allowed.includes(nextTxType)) {
+			this.transactionType = nextTxType
+		}
+		this.beneficiary = { ...found.values }
+		this.persistDraft()
+		this.showFlash(`Loaded recipient "${found.label}"`)
+	}
+
+	private handleDeleteBeneficiary (id : string) {
+		const found = this.savedBeneficiaries.find(item => item.id === id)
+		this.savedBeneficiaries = deleteBeneficiaryProfile(id)
+		if (this.selectedBeneficiaryProfileId === id) this.selectedBeneficiaryProfileId = ''
+		if (found) this.showFlash(`Deleted recipient "${found.label}"`)
+	}
+
+	private fillPartyPreset (party : Party) {
+		const preset = PRESETS[this.currency]
+		if (!preset) return
+		this[party] = toValues(preset[party])
+		if (party === 'sender') this.selectedSenderProfileId = ''
+		else this.selectedBeneficiaryProfileId = ''
+		this.persistDraft()
+		this.showFlash(`Filled ${this.currency} preset for ${party}`)
+	}
+
+	private clearParty (party : Party) {
+		this[party] = {}
+		if (party === 'sender') this.selectedSenderProfileId = ''
+		else this.selectedBeneficiaryProfileId = ''
+		this.persistDraft()
+	}
+
 	private options (party : Party, field : string) : [string, string][] | null {
 		if (party === 'sender' && field === 'idSubType') {
 			const values = ID_SUB_TYPES[this.currency] ?? Object.keys(ID_SUB_TYPE_LABELS)
@@ -623,10 +799,30 @@ export class TestPayoutPage extends OpenElement {
 		return null
 	}
 
+	private datalistFor (party : Party, field : string) : { id : string, items : Array<{ value : string, label : string }> } | null {
+		if (party !== 'beneficiary') return null
+		const dir = this.bankDirectories[this.currency]
+		if (!dir?.length) return null
+		if (field === 'bankCode') {
+			const items = dir
+				.map(entry => ({ value: entry.code ?? entry.bankCode ?? '', label: entry.name }))
+				.filter(item => item.value)
+			if (items.length) return { id: `bank-code-${this.currency}`, items }
+		}
+		if (field === 'napasCode') {
+			const items = dir
+				.map(entry => ({ value: entry.napasCode ?? '', label: entry.name }))
+				.filter(item => item.value)
+			if (items.length) return { id: `napas-code-${this.currency}`, items }
+		}
+		return null
+	}
+
 	private renderInput (party : Party, field : string, required : boolean) {
 		const value = this[party][field] ?? ''
 		const hint = FIELD_HINTS[field] ?? ''
 		const options = this.options(party, field)
+		const datalist = this.datalistFor(party, field)
 		const update = (e : Event) => this.setValue(party, field, (e.currentTarget as HTMLInputElement | HTMLSelectElement).value)
 		return html`
 			<label class=${required && !filled(value.trim()) ? 'field missing' : 'field'} title=${hint}>
@@ -640,32 +836,186 @@ export class TestPayoutPage extends OpenElement {
 				` : html`
 					<input
 						type=${isDate(field) ? 'date' : field === 'email' ? 'email' : 'text'}
+						list=${datalist?.id ?? ''}
 						autocomplete=off
 						?required=${required}
 						placeholder=${hint}
 						.value=${value}
 						@input=${update}>
+					${datalist ? html`
+						<datalist id=${datalist.id}>
+							${datalist.items.map(item => html`<option value=${item.value}>${item.label}</option>`)}
+						</datalist>
+					` : null}
 				`}
 			</label>
+		`
+	}
+
+	private renderSenderToolbar () {
+		const acctType = this.accountType('sender')
+		const autoLabel = formatSenderLabel(this.sender, acctType)
+		return html`
+			<div class=profile-bar>
+				<div class=profile-bar-row>
+					<select
+						class=profile-select
+						aria-label='Saved senders'
+						.value=${this.selectedSenderProfileId}
+						@change=${(e : Event) => this.handleSelectSender((e.currentTarget as HTMLSelectElement).value)}>
+						<option value=''>Saved senders (${this.savedSenders.length})…</option>
+						${this.savedSenders.map(item => html`
+							<option value=${item.id} ?selected=${item.id === this.selectedSenderProfileId}>${item.label}</option>
+						`)}
+					</select>
+					<input
+						class=profile-label-input
+						type=text
+						placeholder=${`Save as: ${autoLabel}`}
+						.value=${this.senderCustomLabel}
+						@input=${(e : Event) => { this.senderCustomLabel = (e.currentTarget as HTMLInputElement).value }}>
+					<button class='button outlined sm' type=button @click=${this.handleSaveSender}>
+						${this.selectedSenderProfileId ? 'Update saved' : 'Save sender'}
+					</button>
+					${this.selectedSenderProfileId ? html`
+						<button class='button danger sm' type=button @click=${() => this.handleDeleteSender(this.selectedSenderProfileId)}>Delete</button>
+					` : null}
+				</div>
+				${this.savedSenders.length > 0 ? html`
+					<div class=profile-chips>
+						${this.savedSenders.slice(0, 6).map(item => html`
+							<button
+								type=button
+								class=${`chip ${item.id === this.selectedSenderProfileId ? 'active' : ''}`}
+								@click=${() => this.handleSelectSender(item.id)}>
+								${item.label}
+							</button>
+						`)}
+					</div>
+				` : null}
+			</div>
+		`
+	}
+
+	private renderBeneficiaryToolbar () {
+		const acctType = this.accountType('beneficiary')
+		const autoLabel = formatBeneficiaryLabel(this.beneficiary, this.currency, acctType)
+		const sameCurrency = this.savedBeneficiaries.filter(item => item.currency === this.currency)
+		const otherCurrency = this.savedBeneficiaries.filter(item => item.currency !== this.currency)
+
+		return html`
+			<div class=profile-bar>
+				<div class=profile-bar-row>
+					<select
+						class=profile-select
+						aria-label='Saved recipients'
+						.value=${this.selectedBeneficiaryProfileId}
+						@change=${(e : Event) => this.handleSelectBeneficiary((e.currentTarget as HTMLSelectElement).value)}>
+						<option value=''>Saved recipients (${this.savedBeneficiaries.length})…</option>
+						${sameCurrency.length ? html`
+							<optgroup label=${`${this.currency} recipients`}>
+								${sameCurrency.map(item => html`<option value=${item.id} ?selected=${item.id === this.selectedBeneficiaryProfileId}>${item.label}</option>`)}
+							</optgroup>
+						` : null}
+						${otherCurrency.length ? html`
+							<optgroup label='Other currencies'>
+								${otherCurrency.map(item => html`<option value=${item.id} ?selected=${item.id === this.selectedBeneficiaryProfileId}>${item.label}</option>`)}
+							</optgroup>
+						` : null}
+					</select>
+					<input
+						class=profile-label-input
+						type=text
+						placeholder=${`Save as: ${autoLabel}`}
+						.value=${this.beneficiaryCustomLabel}
+						@input=${(e : Event) => { this.beneficiaryCustomLabel = (e.currentTarget as HTMLInputElement).value }}>
+					<button class='button outlined sm' type=button @click=${this.handleSaveBeneficiary}>
+						${this.selectedBeneficiaryProfileId ? 'Update saved' : 'Save recipient'}
+					</button>
+					${this.selectedBeneficiaryProfileId ? html`
+						<button class='button danger sm' type=button @click=${() => this.handleDeleteBeneficiary(this.selectedBeneficiaryProfileId)}>Delete</button>
+					` : null}
+				</div>
+				${sameCurrency.length > 0 ? html`
+					<div class=profile-chips>
+						${sameCurrency.slice(0, 6).map(item => html`
+							<button
+								type=button
+								class=${`chip ${item.id === this.selectedBeneficiaryProfileId ? 'active' : ''}`}
+								@click=${() => this.handleSelectBeneficiary(item.id)}>
+								${item.label}
+							</button>
+						`)}
+					</div>
+				` : null}
+			</div>
 		`
 	}
 
 	private renderParty (party : Party) {
 		const { required, optional } = this.fields(party)
 		const missing = required.filter(field => !filled(this[party][field]?.trim())).length
+		const hasPreset = Boolean(PRESETS[this.currency])
 		return html`
 			<fieldset class=party>
-				<legend>${party === 'sender' ? 'Sender' : 'Beneficiary'} · ${this.accountType(party)}</legend>
+				<legend>${party === 'sender' ? 'Sender' : 'Beneficiary (Recipient)'} · ${this.accountType(party)}</legend>
 				<div class=party-head>
-					${this.corridor ? html`<span class=${missing ? 'status danger' : 'status success'}>${missing ? `${missing} missing` : 'complete'}</span>` : null}
-					${party === 'sender' && this.senderSaved ? html`<span class=muted>Saved in this browser</span><button class='button text' type=button @click=${this.forgetSender}>Clear</button>` : null}
+					${this.corridor ? html`<span class=${missing ? 'status danger' : 'status success'}>${missing ? `${missing} required missing` : 'All required filled'}</span>` : null}
+					<div class=party-actions>
+						${hasPreset ? html`<button class='button text sm' type=button @click=${() => this.fillPartyPreset(party)}>Fill ${this.currency} preset</button>` : null}
+						<button class='button text sm' type=button @click=${() => this.clearParty(party)}>Clear fields</button>
+					</div>
 				</div>
+				${party === 'sender' ? this.renderSenderToolbar() : this.renderBeneficiaryToolbar()}
 				<div class=fields>${required.map(field => this.renderInput(party, field, true))}</div>
 				${optional.length ? html`
-					${required.length ? html`<p class='eyebrow optional'>Optional</p>` : null}
+					${required.length ? html`<p class='eyebrow optional'>Optional / Corridor-specific</p>` : null}
 					<div class=fields>${optional.map(field => this.renderInput(party, field, false))}</div>
 				` : null}
 			</fieldset>
+		`
+	}
+
+	private renderQuotePreview () {
+		const client = this.clients.find(item => item.id === this.selectedClientId) ?? this.clients[0]
+		const rateStr = this.rates[this.currency]
+		const rateNum = Number(rateStr)
+		const amountNum = Number(this.amount)
+		if (!rateStr || !Number.isFinite(rateNum) || rateNum <= 0 || !Number.isFinite(amountNum) || amountNum <= 0) {
+			return null
+		}
+		const estProviderUsdt = amountNum / rateNum
+		const commPct = Number(client?.commission_percent ?? 0)
+		const estCommUsdt = estProviderUsdt * (commPct / 100)
+		const estTotalUsdt = estProviderUsdt + estCommUsdt
+		const availNum = Number(client?.available_balance ?? NaN)
+		const insufficient = Number.isFinite(availNum) && estTotalUsdt > availNum
+
+		return html`
+			<div class=${`quote-bar ${insufficient ? 'insufficient' : ''}`}>
+				<div class=quote-item>
+					<span>Indicative rate</span>
+					<strong>1 USDT ≈ ${rateStr} ${this.currency}</strong>
+				</div>
+				<div class=quote-item>
+					<span>Est. provider debit</span>
+					<strong>~${estProviderUsdt.toFixed(2)} USDT</strong>
+				</div>
+				<div class=quote-item>
+					<span>Commission (${commPct}%)</span>
+					<strong>~${estCommUsdt.toFixed(2)} USDT</strong>
+				</div>
+				<div class=quote-item>
+					<span>Est. total debit</span>
+					<strong>~${estTotalUsdt.toFixed(2)} USDT</strong>
+				</div>
+				${client ? html`
+					<div class=quote-item>
+						<span>Client available</span>
+						<strong class=${insufficient ? 'text-danger' : ''}>${money(client.available_balance)} ${insufficient ? '(Insufficient)' : ''}</strong>
+					</div>
+				` : null}
+			</div>
 		`
 	}
 
@@ -673,7 +1023,7 @@ export class TestPayoutPage extends OpenElement {
 		try {
 			const { clients } = await api.clients()
 			this.clients = clients
-			if (!IS_PROD && !this.selectedClientId && clients.length > 0) {
+			if (!this.selectedClientId && !IS_PROD && clients.length > 0) {
 				this.selectedClientId = clients[0].id
 			}
 		} catch {
@@ -686,11 +1036,46 @@ export class TestPayoutPage extends OpenElement {
 		this.currency = next
 		const types = this.requirement?.transaction_types.map(item => item.transaction_type) ?? []
 		if (types.length && !types.includes(this.transactionType)) this.transactionType = types[0]
+
+		const savedRecip = this.savedBeneficiaries.find(item => item.currency === next)
 		const preset = PRESETS[next]
-		if (preset && !IS_PROD) {
+		if (savedRecip) {
+			this.selectedBeneficiaryProfileId = savedRecip.id
+			this.beneficiary = { ...(preset && !IS_PROD ? toValues(preset.beneficiary) : {}), ...savedRecip.values }
+		} else if (preset && !IS_PROD) {
+			this.selectedBeneficiaryProfileId = ''
 			this.amount = preset.amount
-			this.sender = { ...toValues(preset.sender), ...loadSender() }
 			this.beneficiary = toValues(preset.beneficiary)
+		}
+		if (preset && !IS_PROD) {
+			const activeSender = this.savedSenders.find(item => item.id === this.selectedSenderProfileId) ?? this.savedSenders[0]
+			this.sender = { ...toValues(preset.sender), ...(activeSender ? activeSender.values : this.sender) }
+		}
+		this.persistDraft()
+	}
+
+	private async refreshResultStatus () {
+		if (!this.result?.order_id) return
+		this.reconcilingResult = true
+		try {
+			const updated = await api.reconcileOrder(this.result.order_id)
+			this.result = {
+				...this.result,
+				status: updated.status,
+				provider_id: updated.provider_payout_id ?? this.result.provider_id,
+				rate: updated.provider_rate ?? this.result.rate,
+				provider_debit: updated.provider_debit ?? this.result.provider_debit,
+				provider_fee: updated.provider_fee ?? this.result.provider_fee,
+				commission_amount: updated.commission_amount ?? this.result.commission_amount,
+				total_debit: updated.total_debit ?? this.result.total_debit,
+				error_code: updated.error_code,
+				error_message: updated.error_message
+			}
+			await this.loadClients()
+		} catch (error) {
+			this.error = (error as Error).message
+		} finally {
+			this.reconcilingResult = false
 		}
 	}
 
@@ -711,6 +1096,16 @@ export class TestPayoutPage extends OpenElement {
 		const sender = this.payload('sender')
 		const beneficiary = this.payload('beneficiary')
 
+		if (this.autoSaveOnSubmit) {
+			const savedSnd = saveSenderProfile(this.accountType('sender'), sender, this.senderCustomLabel, this.selectedSenderProfileId || undefined)
+			const savedBnf = saveBeneficiaryProfile(this.currency, this.accountType('beneficiary'), beneficiary, this.beneficiaryCustomLabel, this.selectedBeneficiaryProfileId || undefined)
+			this.savedSenders = getSavedSenders()
+			this.savedBeneficiaries = getSavedBeneficiaries()
+			if (savedSnd) this.selectedSenderProfileId = savedSnd.id
+			if (savedBnf) this.selectedBeneficiaryProfileId = savedBnf.id
+		}
+		this.persistDraft()
+
 		try {
 			this.result = await (IS_PROD ? api.createPayout : api.testPayout).call(api, {
 				client_id: String(form.get('client_id') || this.selectedClientId || ''),
@@ -726,9 +1121,9 @@ export class TestPayoutPage extends OpenElement {
 				sender,
 				beneficiary,
 				beneficiaryMethod: { ...beneficiary, currency: String(form.get('payout_currency')) },
-				is_recipient_self: form.get('is_recipient_self') === 'on',
-				isRecipientSelf: form.get('is_recipient_self') === 'on',
-				message: String(form.get('message')) || null
+				is_recipient_self: this.isRecipientSelf,
+				isRecipientSelf: this.isRecipientSelf,
+				message: this.message || null
 			})
 			this.reference = `${IS_PROD ? 'admin' : 'test'}-${crypto.randomUUID()}`
 			await this.loadClients()
@@ -742,39 +1137,112 @@ export class TestPayoutPage extends OpenElement {
 	protected render () {
 		return html`
 			<div class=heading>
-				<div><p class=eyebrow>${IS_PROD ? 'Production' : 'PEXX sandbox'}</p><h1>${IS_PROD ? 'Create payout' : 'Test payout'}</h1></div>
+				<div>
+					<p class=eyebrow>${IS_PROD ? 'Production' : 'PEXX sandbox'}</p>
+					<h1>${IS_PROD ? 'Create payout' : 'Test payout'}</h1>
+				</div>
+				<div class=heading-actions>
+					${this.flashNote ? html`<span class='status success'>${this.flashNote}</span>` : null}
+					${!IS_PROD ? html`
+						<button class='button outlined' type=button @click=${() => {
+							this.fillPartyPreset('sender')
+							this.fillPartyPreset('beneficiary')
+							if (PRESETS[this.currency]) this.amount = PRESETS[this.currency].amount
+						}}>Reset to ${this.currency} preset</button>
+					` : null}
+				</div>
 			</div>
 			${this.error ? html`<section class=notice role=alert>${this.error}</section>` : null}
 			${this.result ? html`
-				<section class=${['CANCELLED', 'SUBMISSION_UNKNOWN'].includes(this.result.status) ? 'notice warning' : 'notice success'} role=status>
-					<strong>${this.result.status === 'CANCELLED' ? 'Payout was rejected.' : this.result.status === 'SUBMISSION_UNKNOWN' ? 'Payout outcome is unknown, reconciling.' : 'Payout order created.'}</strong>
+				<section class=${['CANCELLED', 'REVERSED', 'SUBMISSION_UNKNOWN'].includes(this.result.status) ? 'notice warning' : 'notice success'} role=status>
+					<div class=result-head>
+						<strong>${this.result.status === 'CANCELLED' ? 'Payout was rejected.' : this.result.status === 'SUBMISSION_UNKNOWN' ? 'Payout outcome is unknown, reconciling.' : 'Payout order created.'}</strong>
+						<div class=result-actions>
+							${this.result.order_id ? html`
+								<button class='button outlined sm' type=button ?disabled=${this.reconcilingResult} @click=${this.refreshResultStatus}>
+									${this.reconcilingResult ? 'Checking PEXX…' : 'Refresh status from PEXX'}
+								</button>
+							` : null}
+							${this.result.client_id && this.result.order_id ? html`
+								<a class='button solid sm' href=${`/clients/${this.result.client_id}?order=${this.result.order_id}`}>Inspect transaction →</a>
+							` : null}
+						</div>
+					</div>
 					${this.result.error_message ? html`<div>Reason <code>${this.result.error_code ? `${this.result.error_code} · ` : ''}${this.result.error_message}</code></div>` : null}
-					${this.result.client_id ? html`<div>Client <a href=${`/clients/${this.result.client_id}`}>${this.result.client_name ?? this.result.client_id}</a></div>` : null}
-					${this.result.order_id ? html`<div>Order ID <code>${this.result.order_id}</code> ${copyButton(this.result.order_id)} · Reference <code>${this.result.reference_id ?? this.result.merchant_reference_id}</code></div>` : html`<div>Reference <code>${this.result.merchant_reference_id}</code></div>`}
+					<div>
+						Status <span class=${`status ${statusTone(this.result.status)}`}>${this.result.status}</span>
+						${this.result.client_id ? html` · Client <a href=${`/clients/${this.result.client_id}`}>${this.result.client_name ?? this.result.client_id}</a>` : null}
+					</div>
+					${this.result.order_id ? html`<div>Order ID <code>${this.result.order_id}</code> ${copyButton(this.result.order_id)} · Reference <code>${this.result.reference_id ?? this.result.merchant_reference_id}</code> ${copyButton(this.result.reference_id ?? this.result.merchant_reference_id)}</div>` : html`<div>Reference <code>${this.result.merchant_reference_id}</code></div>`}
 					<div>Provider ID <code title=${this.result.provider_id}>${short(this.result.provider_id || '—')}</code> ${copyButton(this.result.provider_id)}</div>
-					<div>Status <span class=status>${this.result.status}</span></div>
-					<div>Provider debit ${money(this.result.provider_debit)} · Fee ${money(this.result.provider_fee)} · Commission ${money(this.result.commission_amount ?? '0')} · Total debit ${money(this.result.total_debit ?? this.result.provider_debit)} · Rate ${this.result.rate}</div>
+					<div>Provider debit <strong>${money(this.result.provider_debit)}</strong> · Fee ${money(this.result.provider_fee)} · Commission ${money(this.result.commission_amount ?? '0')} · Total debit <strong>${money(this.result.total_debit ?? this.result.provider_debit)}</strong> · Rate ${this.result.rate}</div>
 				</section>
 			` : null}
 			<form class='panel payout-form' @submit=${this.create}>
-				<label>Client
-					<select name=client_id required .value=${this.selectedClientId} @change=${(e : Event) => { this.selectedClientId = (e.currentTarget as HTMLSelectElement).value }}>
-						${IS_PROD ? html`<option value='' ?selected=${!this.selectedClientId}>Select client…</option>` : null}
+				<div class=split>
+					<label>Client
+						<select name=client_id required .value=${this.selectedClientId} @change=${(e : Event) => {
+							this.selectedClientId = (e.currentTarget as HTMLSelectElement).value
+							this.persistDraft()
+						}}>
+							${IS_PROD ? html`<option value='' ?selected=${!this.selectedClientId}>Select client…</option>` : null}
 							${this.clients.map(client => html`<option value=${client.id} ?selected=${client.id === this.selectedClientId}>${client.name} (Available: ${money(client.available_balance)}, Commission: ${client.commission_percent}%)</option>`)}
-					</select>
-				</label>
-				<div class=split>
-					<label>Merchant reference<input name=merchant_reference_id required autocomplete=off .value=${this.reference}></label>
-					<label>Amount<input name=payout_amount required inputmode=decimal .value=${this.amount} @input=${(e : Event) => { this.amount = (e.currentTarget as HTMLInputElement).value }}></label>
+						</select>
+					</label>
+					<label>Merchant reference
+						<div class=input-with-action>
+							<input name=merchant_reference_id required autocomplete=off .value=${this.reference} @input=${(e : Event) => { this.reference = (e.currentTarget as HTMLInputElement).value }}>
+							<button class='button outlined sm' type=button @click=${() => { this.reference = `${IS_PROD ? 'admin' : 'test'}-${crypto.randomUUID()}` }}>New ID</button>
+						</div>
+					</label>
 				</div>
-				<div class=split>
-					<label>Currency<select name=payout_currency .value=${this.currency} @change=${this.onCurrencyChange}><option>IDR</option><option>PHP</option><option>INR</option><option>VND</option><option>CNY</option><option>GBP</option><option>EUR</option><option>USD</option><option>PKR</option><option>AED</option><option>AUD</option><option>THB</option><option>JPY</option><option>MYR</option><option>CAD</option><option>KRW</option><option>HKD</option></select></label>
-					<label>Transaction type<select name=transaction_type .value=${this.transactionType} @change=${(e : Event) => { this.transactionType = (e.currentTarget as HTMLSelectElement).value }}>${(this.requirement?.transaction_types.map(item => item.transaction_type) ?? ['C2C', 'C2B', 'B2C', 'B2B']).map(type => html`<option ?selected=${type === this.transactionType}>${type}</option>`)}</select></label>
+				<div class=split-3>
+					<label>Currency
+						<select name=payout_currency .value=${this.currency} @change=${this.onCurrencyChange}>
+							<option>IDR</option><option>PHP</option><option>INR</option><option>VND</option><option>CNY</option><option>GBP</option><option>EUR</option><option>USD</option><option>PKR</option><option>AED</option><option>AUD</option><option>THB</option><option>JPY</option><option>MYR</option><option>CAD</option><option>KRW</option><option>HKD</option>
+						</select>
+					</label>
+					<label>Transaction type
+						<select name=transaction_type .value=${this.transactionType} @change=${(e : Event) => {
+							this.transactionType = (e.currentTarget as HTMLSelectElement).value
+							this.persistDraft()
+							this.loadRates()
+						}}>
+							${(this.requirement?.transaction_types.map(item => item.transaction_type) ?? ['C2C', 'C2B', 'B2C', 'B2B']).map(type => html`<option ?selected=${type === this.transactionType}>${type}</option>`)}
+						</select>
+					</label>
+					<label>Payout amount (${this.currency})
+						<input name=payout_amount required inputmode=decimal .value=${this.amount} @input=${(e : Event) => {
+							this.amount = (e.currentTarget as HTMLInputElement).value
+							this.persistDraft()
+						}}>
+					</label>
 				</div>
+				${this.renderQuotePreview()}
 				<div class=split>${this.renderParty('sender')}${this.renderParty('beneficiary')}</div>
 				${this.requirement?.rules.length ? html`<ul class=rules>${this.requirement.rules.map(rule => html`<li>${rule}</li>`)}</ul>` : null}
-				<label>Message<input name=message autocomplete=off value=${IS_PROD ? '' : 'Sandbox test payout'}></label>
-				<label><span><input name=is_recipient_self type=checkbox> Sender and recipient are the same person</span></label>
+				<label>Message / Remark
+					<input name=message autocomplete=off .value=${this.message} @input=${(e : Event) => {
+						this.message = (e.currentTarget as HTMLInputElement).value
+						this.persistDraft()
+					}}>
+				</label>
+				<div class=checkbox-row>
+					<label class=checkbox-label>
+						<input name=is_recipient_self type=checkbox .checked=${this.isRecipientSelf} @change=${(e : Event) => {
+							this.isRecipientSelf = (e.currentTarget as HTMLInputElement).checked
+							this.persistDraft()
+						}}>
+						<span>Sender and recipient are the same person</span>
+					</label>
+					<label class=checkbox-label>
+						<input type=checkbox .checked=${this.autoSaveOnSubmit} @change=${(e : Event) => {
+							this.autoSaveOnSubmit = (e.currentTarget as HTMLInputElement).checked
+							this.persistDraft()
+						}}>
+						<span>Automatically save sender & recipient in browser on submit</span>
+					</label>
+				</div>
 				<button class='button solid' type=submit ?disabled=${this.submitting}>${this.submitting ? 'Submitting…' : IS_PROD ? 'Create payout' : 'Create test payout'}</button>
 			</form>
 		`

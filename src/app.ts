@@ -1,5 +1,5 @@
 import { html } from 'lit'
-import { customElement } from 'lit/decorators.js'
+import { customElement, state } from 'lit/decorators.js'
 import { OpenElement } from './lib/element.ts'
 import { router, type Route } from './controllers/router.ts'
 import { environments, getEnvironment, setEnvironment, type EnvironmentId } from './controllers/environment.ts'
@@ -43,6 +43,15 @@ const routes : Route[] = [
 
 @customElement('epay-app')
 export class App extends OpenElement {
+	@state() private currentPath = location.pathname
+
+	connectedCallback () {
+		super.connectedCallback()
+		router.addEventListener('route', () => {
+			this.currentPath = location.pathname
+		})
+	}
+
 	protected firstUpdated () {
 		const outlet = this.querySelector<HTMLElement>('main')
 
@@ -51,14 +60,15 @@ export class App extends OpenElement {
 
 	protected render () {
 		const environment = getEnvironment()
+		const path = this.currentPath
 
 		return html`
 			<header class=topbar data-environment=${environment.id}>
 				<a class=brand href=/ aria-label='ePay admin home'>ePay <span>Admin</span></a>
 				<nav aria-label=Primary>
-					<a href=/>Liquidity</a>
-					<a href=/clients>Clients</a>
-					<a href=/test-payout>${environment.id === 'prod' ? 'Create payout' : 'Test payout'}</a>
+					<a class=${path === '/' ? 'active' : ''} href=/>Liquidity</a>
+					<a class=${path.startsWith('/clients') ? 'active' : ''} href=/clients>Clients</a>
+					<a class=${path === '/test-payout' ? 'active' : ''} href=/test-payout>${environment.id === 'prod' ? 'Create payout' : 'Test payout'}</a>
 					<select class=env-switch aria-label=Environment @change=${(event : Event) => setEnvironment((event.target as HTMLSelectElement).value as EnvironmentId)}>
 						${environments.map(item => html`<option value=${item.id} .selected=${item.id === environment.id}>${item.label}</option>`)}
 					</select>
