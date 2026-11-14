@@ -2,21 +2,22 @@ import { getEnvironment } from '../controllers/environment.ts'
 
 export type Values = Record<string, string>
 
-export interface SavedSender {
+export interface RecentSender {
 	id : string
 	label : string
 	accountType : 'PERSONAL' | 'BUSINESS'
 	values : Values
-	updatedAt : string
+	usedAt : string
 }
 
-export interface SavedBeneficiary {
+export interface RecentBeneficiary {
 	id : string
 	label : string
+	sublabel : string
 	currency : string
 	accountType : 'PERSONAL' | 'BUSINESS'
 	values : Values
-	updatedAt : string
+	usedAt : string
 }
 
 export interface PayoutDraft {
@@ -28,7 +29,6 @@ export interface PayoutDraft {
 	beneficiary? : Values
 	message? : string
 	isRecipientSelf? : boolean
-	autoSaveOnSubmit? : boolean
 }
 
 export interface PayoutPrefill {
@@ -42,8 +42,8 @@ export interface PayoutPrefill {
 	isRecipientSelf? : boolean
 }
 
-const SENDERS_KEY = 'epay-saved-senders:v1'
-const BENEFICIARIES_KEY = 'epay-saved-beneficiaries:v1'
+const SENDERS_KEY = 'epay-recent-senders:v1'
+const BENEFICIARIES_KEY = 'epay-recent-beneficiaries:v1'
 const LEGACY_SENDER_KEY = `epay-test-payout-sender:${getEnvironment().id}`
 const DRAFT_KEY = `epay-payout-draft:${getEnvironment().id}`
 const PREFILL_KEY = 'epay-payout-prefill'
@@ -63,7 +63,7 @@ function writeJson (storage : Storage, key : string, value : unknown) {
 		if (value === null || value === undefined) storage.removeItem(key)
 		else storage.setItem(key, JSON.stringify(value))
 	} catch {
-		// Ignore quota or privacy mode errors
+		// Ignore storage errors
 	}
 }
 
@@ -79,44 +79,43 @@ export function cleanValues (values : Record<string, unknown> | null | undefined
 	return out
 }
 
-export function formatSenderLabel (values : Values, accountType : 'PERSONAL' | 'BUSINESS') : string {
-	const name = values.name
+export function senderDisplayName (values : Values) : string {
+	return values.name
 		|| [values.firstName, values.lastName].filter(Boolean).join(' ')
 		|| values.email
 		|| values.registrationNumber
-		|| 'Unnamed sender'
-	const country = values.nationality || values.country || ''
-	return [name, accountType === 'BUSINESS' ? 'Business' : 'Personal', country].filter(Boolean).join(' · ')
+		|| 'Sender'
 }
 
-export function formatBeneficiaryLabel (values : Values, currency : string, accountType : 'PERSONAL' | 'BUSINESS') : string {
-	const name = values.name
+export function beneficiaryDisplay (values : Values, currency : string) : { label : string, sublabel : string } {
+	const label = values.name
 		|| [values.firstName, values.lastName].filter(Boolean).join(' ')
 		|| [values.nativeLastName, values.nativeFirstName].filter(Boolean).join('')
 		|| values.nativeName
+		|| values.accountNumber
+		|| values.bankAccountNumber
 		|| 'Recipient'
 	const bank = values.bankCode || values.napasCode || values.ifsc || values.swiftCode || (values.bankId ? `Bank #${values.bankId}` : '')
 	const acct = values.accountNumber || values.bankAccountNumber || values.vpa || ''
-	const shortAcct = acct.length > 8 ? `…${acct.slice(-4)}` : acct
-	const method = [bank, shortAcct].filter(Boolean).join(' ')
-	return [name, currency, method || (accountType === 'BUSINESS' ? 'Business' : 'Personal')].filter(Boolean).join(' · ')
+	const shortAcct = acct.length > 10 ? `…${acct.slice(-6)}` : acct
+	const sublabel = [currency, bank, shortAcct].filter(Boolean).join(' · ')
+	return { label, sublabel }
 }
 
-export function getSavedSenders () : SavedSender[] {
-	const list = readJson<SavedSender[]>(localStorage, SENDERS_KEY, [])
+export function getRecentSenders () : RecentSender[] {
+	const list = readJson<RecentSender[]>(localStorage, SENDERS_KEY, [])
 	if (Array.isArray(list) && list.length > 0) return list
 
-	// Migrate legacy single sender if present
 	const legacy = readJson<Record<string, string> | null>(localStorage, LEGACY_SENDER_KEY, null)
-	if (legacy && typeof legacy === 'object' && Object.keys(legacy).length > 0) {
+	if (legacy && typeof legacy === 'object') {
 		const cleaned = cleanValues(legacy)
 		if (Object.keys(cleaned).length > 0) {
-			const migrated : SavedSender = {
+			const migrated : RecentSender = {
 				id: 'snd_legacy',
 				accountType: 'PERSONAL',
 				values: cleaned,
-				label: formatSenderLabel(cleaned, 'PERSONAL'),
-				updatedAt: new Date().toISOString()
+				label: senderDisplayName(cleaned),
+				usedAt: new Date().toISOString()
 			}
 			writeJson(localStorage, SENDERS_KEY, [migrated])
 			return [migrated]
@@ -125,131 +124,126 @@ export function getSavedSenders () : SavedSender[] {
 	return []
 }
 
-export function saveSenderProfile (
-	accountType : 'PERSONAL' | 'BUSINESS',
-	rawValues : Record<string, unknown>,
-	customLabel? : string,
-	existingId? : string
-) : SavedSender | null {
+export function recordSenderHistory (accountType : 'PERSONAL' | 'BUSINESS', rawValues : Record<string, unknown>) : RecentSender | null {
 	const values = cleanValues(rawValues)
 	if (Object.keys(values).length === 0) return null
 
-	const list = getSavedSenders()
-	const label = customLabel?.trim() || formatSenderLabel(values, accountType)
+	const label = senderDisplayName(values)
+	const list = getRecentSenders()
 	const now = new Date().toISOString()
+	const key = `${accountType}:${label.toLowerCase()}`
 
-	// Update existing by ID or by matching label + accountType
-	const matchIndex = list.findIndex(item =>
-		(existingId && item.id === existingId) ||
-		(item.accountType === accountType && item.label.toLowerCase() === label.toLowerCase())
-	)
-
-	let saved : SavedSender
-	if (matchIndex >= 0) {
-		saved = {
-			...list[matchIndex],
+	const idx = list.findIndex(item => `${item.accountType}:${item.label.toLowerCase()}` === key)
+	let entry : RecentSender
+	if (idx >= 0) {
+		entry = {
+			...list[idx],
 			label,
 			accountType,
-			values: { ...list[matchIndex].values, ...values },
-			updatedAt: now
+			values: { ...list[idx].values, ...values },
+			usedAt: now
 		}
-		list.splice(matchIndex, 1)
-		list.unshift(saved)
+		list.splice(idx, 1)
+		list.unshift(entry)
 	} else {
-		saved = {
+		entry = {
 			id: `snd_${crypto.randomUUID().slice(0, 8)}`,
 			label,
 			accountType,
 			values,
-			updatedAt: now
+			usedAt: now
 		}
-		list.unshift(saved)
+		list.unshift(entry)
 	}
-
-	writeJson(localStorage, SENDERS_KEY, list.slice(0, 50))
-	return saved
+	writeJson(localStorage, SENDERS_KEY, list.slice(0, 15))
+	writeJson(localStorage, LEGACY_SENDER_KEY, entry.values)
+	return entry
 }
 
-export function deleteSenderProfile (id : string) : SavedSender[] {
-	const next = getSavedSenders().filter(item => item.id !== id)
+export function removeSenderHistory (id : string) : RecentSender[] {
+	const next = getRecentSenders().filter(item => item.id !== id)
 	writeJson(localStorage, SENDERS_KEY, next)
-	try {
-		if (next.length === 0) localStorage.removeItem(LEGACY_SENDER_KEY)
-	} catch {
-		// ignore
-	}
 	return next
 }
 
-export function getSavedBeneficiaries () : SavedBeneficiary[] {
-	const list = readJson<SavedBeneficiary[]>(localStorage, BENEFICIARIES_KEY, [])
+export function getRecentBeneficiaries () : RecentBeneficiary[] {
+	const list = readJson<RecentBeneficiary[]>(localStorage, BENEFICIARIES_KEY, [])
 	return Array.isArray(list) ? list : []
 }
 
-export function saveBeneficiaryProfile (
+export function recordBeneficiaryHistory (
 	currency : string,
 	accountType : 'PERSONAL' | 'BUSINESS',
-	rawValues : Record<string, unknown>,
-	customLabel? : string,
-	existingId? : string
-) : SavedBeneficiary | null {
+	rawValues : Record<string, unknown>
+) : RecentBeneficiary | null {
 	const values = cleanValues(rawValues)
 	if (Object.keys(values).length === 0) return null
 
-	const list = getSavedBeneficiaries()
-	const label = customLabel?.trim() || formatBeneficiaryLabel(values, currency, accountType)
+	const { label, sublabel } = beneficiaryDisplay(values, currency)
+	const list = getRecentBeneficiaries()
 	const now = new Date().toISOString()
-	const acctKey = values.accountNumber || values.bankAccountNumber || values.vpa || ''
+	const acctKey = values.accountNumber || values.bankAccountNumber || values.vpa || label.toLowerCase()
 
-	const matchIndex = list.findIndex(item =>
-		(existingId && item.id === existingId) ||
-		(item.currency === currency && item.accountType === accountType && (
-			item.label.toLowerCase() === label.toLowerCase() ||
-			(acctKey && (item.values.accountNumber === acctKey || item.values.bankAccountNumber === acctKey || item.values.vpa === acctKey))
-		))
+	const idx = list.findIndex(item =>
+		item.currency === currency &&
+		item.accountType === accountType &&
+		((item.values.accountNumber || item.values.bankAccountNumber || item.values.vpa || item.label.toLowerCase()) === acctKey)
 	)
 
-	let saved : SavedBeneficiary
-	if (matchIndex >= 0) {
-		saved = {
-			...list[matchIndex],
+	let entry : RecentBeneficiary
+	if (idx >= 0) {
+		entry = {
+			...list[idx],
 			label,
+			sublabel,
 			currency,
 			accountType,
-			values: { ...list[matchIndex].values, ...values },
-			updatedAt: now
+			values: { ...list[idx].values, ...values },
+			usedAt: now
 		}
-		list.splice(matchIndex, 1)
-		list.unshift(saved)
+		list.splice(idx, 1)
+		list.unshift(entry)
 	} else {
-		saved = {
+		entry = {
 			id: `bnf_${crypto.randomUUID().slice(0, 8)}`,
 			label,
+			sublabel,
 			currency,
 			accountType,
 			values,
-			updatedAt: now
+			usedAt: now
 		}
-		list.unshift(saved)
+		list.unshift(entry)
 	}
 
-	writeJson(localStorage, BENEFICIARIES_KEY, list.slice(0, 100))
-	return saved
+	writeJson(localStorage, BENEFICIARIES_KEY, list.slice(0, 25))
+	return entry
 }
 
-export function deleteBeneficiaryProfile (id : string) : SavedBeneficiary[] {
-	const next = getSavedBeneficiaries().filter(item => item.id !== id)
+export function removeBeneficiaryHistory (id : string) : RecentBeneficiary[] {
+	const next = getRecentBeneficiaries().filter(item => item.id !== id)
 	writeJson(localStorage, BENEFICIARIES_KEY, next)
 	return next
 }
 
 export function loadPayoutDraft () : PayoutDraft {
-	return readJson<PayoutDraft>(localStorage, DRAFT_KEY, {})
+	const draft = readJson<PayoutDraft>(localStorage, DRAFT_KEY, {})
+	if (!draft.sender || Object.keys(draft.sender).length === 0) {
+		const legacy = readJson<Record<string, string> | null>(localStorage, LEGACY_SENDER_KEY, null)
+		if (legacy && typeof legacy === 'object') {
+			draft.sender = cleanValues(legacy)
+		}
+	}
+	return draft
 }
 
 export function savePayoutDraft (draft : PayoutDraft) {
 	const current = loadPayoutDraft()
-	writeJson(localStorage, DRAFT_KEY, { ...current, ...draft })
+	const merged = { ...current, ...draft }
+	writeJson(localStorage, DRAFT_KEY, merged)
+	if (draft.sender) {
+		writeJson(localStorage, LEGACY_SENDER_KEY, draft.sender)
+	}
 }
 
 export function setPayoutPrefill (prefill : PayoutPrefill) {

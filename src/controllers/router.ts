@@ -6,6 +6,7 @@ export interface Route {
 class Router extends EventTarget {
 	#routes : Route[] = []
 	#outlet : HTMLElement | null = null
+	#currentPathname = ''
 
 	start (outlet : HTMLElement, routes : Route[]) {
 		this.#outlet = outlet
@@ -18,6 +19,8 @@ class Router extends EventTarget {
 			// the API origin, which modules capture once at startup.
 			if (!event.canIntercept || event.navigationType === 'reload' || event.hashChange || event.downloadRequest !== null) return
 			if (url.origin !== location.origin) return
+			// Do not recreate the page component when only query params change on the same path
+			if (url.pathname === this.#currentPathname && this.#outlet?.children.length) return
 
 			event.intercept({ handler: () => this.render(url) })
 		})
@@ -34,6 +37,7 @@ class Router extends EventTarget {
 			return
 		}
 
+		this.#currentPathname = url.pathname
 		const page = await route.load(match)
 		const replace = () => this.#outlet!.replaceChildren(page)
 
